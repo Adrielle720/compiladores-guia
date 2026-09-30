@@ -1,12 +1,12 @@
 /* =========================================================================
-   ROTEIRO 6 — depurador animado (Java)
-   Usa o Motor (r6/motor.js, validado contra o javac) e a referência Java
-   do Roteiro 6 (window.R6_FONTE). Visual no mesmo estilo da animação
-   da Colinha: fita de tokens, pilha de chamadas, AST e código ativo.
+   DEPURADOR ANIMADO (Java) — Roteiros 5 e 6
+   <div data-java-dep="v2.0"> ou "v2.1". Usa o Motor (adrielle/motor.js,
+   validado contra o javac) e os fontes Java em window.JAVA_FONTES. Visual
+   no estilo da animação da Colinha: fita de tokens, pilha de chamadas,
+   AST e código ativo.
    ========================================================================= */
 (function () {
   "use strict";
-  var F = window.R6_FONTE, SRC = F.src.split("\n"), LN = F.linhas;
 
   function h(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
@@ -23,9 +23,11 @@
     });
   }
 
-  // ---------------------------------------------- métodos do arquivo Java
-  var METODOS = (function () {
-    var M = [];
+  // ------------------------------- fonte Java de cada versão + seus métodos
+  var CACHE = {};
+  function fonteJava(v) {
+    if (CACHE[v]) return CACHE[v];
+    var f = window.JAVA_FONTES[v], SRC = f.src.split("\n"), M = [];
     SRC.forEach(function (l, i) {
       var m = /^\s+(?:public\s+|static\s+|abstract\s+|private\s+)*[\w<>\[\],]+\s+(\w+)\s*\([^)]*\)\s*(?:throws\s+\w+\s*)?\{/.exec(l);
       if (!m || /^(if|while|for|switch|catch)$/.test(m[1])) return;
@@ -36,12 +38,14 @@
         if (prof <= 0) { M.push({ de: i + 1, ate: j + 1 }); break; }
       }
     });
-    return M;
-  })();
-  function metodoDe(l) {
-    var best = null;
-    METODOS.forEach(function (m) { if (l >= m.de && l <= m.ate && (!best || m.ate - m.de < best.ate - best.de)) best = m; });
-    return best;
+    return (CACHE[v] = {
+      SRC: SRC, LN: f.linhas,
+      metodoDe: function (l) {
+        var best = null;
+        M.forEach(function (m) { if (l >= m.de && l <= m.ate && (!best || m.ate - m.de < best.ate - best.de)) best = m; });
+        return best;
+      }
+    });
   }
 
   // ------------------------------------------------------------ rótulos
@@ -73,7 +77,19 @@
   var KIND = function (fn) { return /^Lexer/.test(fn) ? "lex" : /^Parser/.test(fn) ? "syn" : /evaluate|SymbolTable|Scanner/.test(fn) ? "sem" : "main"; };
   var RET_EVAL = /^(ev_int|ev_un_neg|ev_un_not|ev_un_pos|ev_bin_(plus|minus|mult|div|eq|gt|lt|and|or)|ev_read_ret|st_get_ret)$/;
 
-  var EXEMPLOS = [
+  var EXEMPLOS = {};
+  EXEMPLOS["v2.0"] = [
+    ["meta do roteiro", "// Comentário!\nx1 = 3\ny2 = 4\nz_final = x1 + y2\nPrintln(z_final)", ""],
+    ["reatribuição", "x = 2\nx = x * x + 1\n\nPrintln(x)\nPrintln(-x / 2)", ""],
+    ["linha vazia e comentário", "a = 7 // fim de linha\n\n// linha só de comentário\nPrintln(a * (a - 1))", ""],
+    ["erro: variável", "x = 1\nPrintln(x + y)", ""],
+    ["erro: 1x", "1x = 3", ""],
+    ["erro: _x", "_x = 3", ""],
+    ["erro: println", "println(3)", ""],
+    ["erro: parêntese", "x = 3\nPrintln(x", ""],
+    ["divisão por zero", "a = 4\nb = a - 4\nPrintln(a / b)", ""]
+  ];
+  EXEMPLOS["v2.1"] = [
     ["fatorial (meta)", "i = 1\nn = 5\nf = 1\nif n < 2 {\n    f = 1\n} else {\n    for i < n || i == n {\n        f = f * i\n        i = i + 1\n    }\n}\nPrintln(f)", ""],
     ["Scanln + if/else", "x = Scanln()\ny = Scanln()\nif x > y && !(x == 0) {\n    Println(x)\n} else {\n    Println(y)\n}", "7\n3\n"],
     ["for com && e !", "n = Scanln()\ni = 0\nfor i < n && !(i == 3) {\n    Println(i)\n    i = i + 1\n}", "10\n"],
@@ -89,8 +105,9 @@
   var SELO = { main: "Preparação", prepro: "PrePro", lexer: "Léxico", parser: "Sintático", eval: "Semântico", erro: "Erro", fim: "Fim" };
   var COR = { lexer: "#14674c", parser: "#215c7a", eval: "#bd711d", erro: "#a13216", main: "#819096", prepro: "#819096", fim: "#14674c" };
 
-  function montar(host) {
-    var uid = "r6d" + Math.random().toString(36).slice(2, 7);
+  function montar(host, versao) {
+    var X = fonteJava(versao), SRC = X.SRC, LN = X.LN, metodoDe = X.metodoDe, EXS = EXEMPLOS[versao];
+    var uid = "jd" + Math.random().toString(36).slice(2, 7);
     host.classList.add("r6");
     host.innerHTML =
       '<div class="r6-ent">' +
@@ -138,7 +155,12 @@
     };
     var S = { res: null, i: 0, timer: null, inteiro: false, mostra: "" };
 
-    EXEMPLOS.forEach(function (ex, k) {
+    if (versao !== "v2.1") {  // antes do Roteiro 6 não existe Scanln
+      host.querySelector(".r6-in").hidden = true;
+      host.querySelector(".r6-campo-in .lb").hidden = true;
+      host.querySelector(".r6-stdin").hidden = true;
+    }
+    EXS.forEach(function (ex, k) {
       var b = document.createElement("button");
       b.type = "button"; b.className = "preset"; b.textContent = ex[0];
       b.setAttribute("aria-pressed", k === 0 ? "true" : "false");
@@ -152,7 +174,7 @@
     function compila() {
       parar();
       var src = E.src.value;
-      S.res = Motor.executar("v2.1", src, { stdin: E.inp.value, max: 20000 });
+      S.res = Motor.executar(versao, src, { stdin: E.inp.value, max: 20000 });
       S.mostra = src + "\n";
       S.stdin = E.inp.value;
       E.sl.max = String(S.res.trace.steps.length - 1);
@@ -412,17 +434,22 @@
       E.tx.className = "tx r6-tx" + (s.erro ? " erro" : "");
     }
 
-    E.src.value = EXEMPLOS[0][1];
-    E.inp.value = EXEMPLOS[0][2];
+    E.src.value = EXS[0][1];
+    E.inp.value = EXS[0][2];
     compila();
     return { carregar: function (src, stdin) { E.src.value = src; E.inp.value = stdin || ""; compila(); host.scrollIntoView({ behavior: "smooth", block: "start" }); tocar(); } };
   }
 
-  var inst = [];
-  Array.prototype.forEach.call(document.querySelectorAll("[data-r6]"), function (el) { inst.push(montar(el)); });
+  // um depurador por versão; [data-java-abrir][data-versao] carrega um programa nele
+  var inst = {};
+  Array.prototype.forEach.call(document.querySelectorAll("[data-java-dep]"), function (el) {
+    var v = el.getAttribute("data-java-dep");
+    inst[v] = montar(el, v);
+  });
   document.addEventListener("click", function (e) {
-    var b = e.target.closest("[data-r6-abrir]");
-    if (!b || !inst[0]) return;
-    inst[0].carregar(b.getAttribute("data-r6-abrir").replace(/\\n/g, "\n"), (b.getAttribute("data-stdin") || "").replace(/\\n/g, "\n"));
+    var b = e.target.closest("[data-java-abrir]");
+    if (!b) return;
+    var alvo = inst[b.getAttribute("data-versao") || "v2.1"];
+    if (alvo) alvo.carregar(b.getAttribute("data-java-abrir").replace(/\\n/g, "\n"), (b.getAttribute("data-stdin") || "").replace(/\\n/g, "\n"));
   });
 })();

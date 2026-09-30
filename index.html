@@ -980,7 +980,7 @@ footer.fim{margin-top:44px;padding-top:20px;border-top:1px solid var(--rule);fon
 <header class="topbar">
   <a class="brand" href="#aulas"><span class="brand-icon">&#955;</span>sete<span class="brand-light">classes</span><span class="beta">COMPILADOR 01</span></a>
   <span class="header-note">Linguagens &amp; Paradigmas &#183; Insper</span>
-  <span class="profile">O<span class="profile-name">Espaço do Oscar</span></span>
+  <span class="profile">A<span class="profile-name">Espaço da Adrielle</span></span>
 </header>
 
 <div class="shell">
@@ -1028,9 +1028,13 @@ footer.fim{margin-top:44px;padding-top:20px;border-top:1px solid var(--rule);fon
         <a class="sn-sub sn-s-lex" href="#r2" data-sub="r2"><span class="n">v1.0</span>Separação de fases</a>
         <a class="sn-sub sn-s-syn" href="#r3" data-sub="r3"><span class="n">v1.1</span>Precedência</a>
         <a class="sn-sub sn-s-sem" href="#r4" data-sub="r4"><span class="n">v1.2</span>A AST</a>
-<!-- R6:nav -->
+<!-- ADR:nav -->
+        <a class="sn-sub sn-s-err" href="#r5" data-sub="r5"><span class="n">v2.0</span>Roteiro 5 · Java</a>
         <a class="sn-sub sn-s-err" href="#r6" data-sub="r6"><span class="n">v2.1</span>Roteiro 6 · Java</a>
-<!-- /R6:nav -->
+<!-- /ADR:nav -->
+
+
+
 
 
 
@@ -3499,7 +3503,96 @@ SYMBOLS = { ..., <span class="s">"!"</span>: <span class="s">"FACT"</span> }
 
       <a class="proxima" href="#colinha"><span><span class="lbl">Próxima seção</span><span class="tt">Colinha · Como acrescentar um operador</span></span><span class="seta">&#8594;</span></a>
     </section>
-<!-- R6:secao -->
+<!-- ADR:secoes -->
+    <!-- ---------------- R5 ---------------- -->
+    <section id="r5" class="painel">
+      <div class="rot-head">
+        <span class="ver">v2.0</span>
+        <span class="meta">
+          <span class="eyebrow">Roteiro 5 · variáveis, blocos, Println e comentários · em Java</span>
+          <h3 style="font-size:clamp(1.4rem,2.8vw,1.85rem);font-weight:600">De calculadora a interpretador</h3>
+          <span class="mudancas"><span class="mud novo">PrePro</span><span class="mud novo">SymbolTable · Variable</span><span class="mud novo">Identifier · Print · Assignment · Block · NoOp</span><span class="mud novo">ASSIGN END PRINT IDEN</span><span class="mud estr">parseProgram · parseStatement</span><span class="mud nome">evaluate(st)</span><span class="mud nome">entrada por arquivo</span></span>
+        </span>
+      </div>
+
+      <p class="prose">O Roteiro 5 é o maior salto do curso: o compilador deixa de avaliar <em>uma</em> expressão e passa a executar um <strong>programa</strong>, uma instrução por linha, com variáveis que guardam valores entre uma linha e outra. A meta do roteiro:</p>
+      <div class="code syn"><pre><span class="c">// Comentário!</span>
+x1 = 3
+y2 = 4
+z_final = x1 + y2
+Println(z_final)</pre></div>
+
+      <p class="prose" style="background:#fff8e8;border:1px solid #efd9a9;border-radius:8px;padding:10px 13px"><strong>Esta aba é em Java, com o seu código de verdade:</strong> o painel "Código" mostra o <code class="inl">main.java</code> da tag <code class="inl">v2.0.2</code>, sem nenhuma alteração. O depurador reimplementa cada método e foi conferido contra o <code class="inl">javac</code>: mesmas saídas e mesmas mensagens de erro.</p>
+
+      <div class="tab-wrap">
+        <table class="tab matriz r6-matriz">
+          <thead><tr><th>peça</th><th>v1.2 (Roteiro 4)</th><th>v2.0 (Roteiro 5)</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">main()</td><td>args[0] é a expressão</td><td class="nasce">args[0] é o arquivo · + "\n" · PrePro · cria a SymbolTable</td></tr>
+            <tr><td class="mono">PrePro</td><td class="ausente">—</td><td class="nasce">nasce · filter() tira os // comentários</td></tr>
+            <tr><td class="mono">Lexer</td><td>+ - * / ( ) INT</td><td class="nasce">+ ASSIGN, END ('\n' vira token!), PRINT, IDEN</td></tr>
+            <tr><td class="mono">SymbolTable · Variable</td><td class="ausente">—</td><td class="nasce">nascem · getValue lança [Semantic]</td></tr>
+            <tr><td class="mono">Node.evaluate</td><td>evaluate()</td><td class="nasce">evaluate(SymbolTable st), em TODOS os nós</td></tr>
+            <tr><td class="mono">Identifier · Print · Assignment · Block · NoOp</td><td class="ausente">—</td><td class="nasce">nascem</td></tr>
+            <tr><td class="mono">Parser</td><td>run → expression</td><td class="nasce">run → program → statement → expression</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>A gramática</h4>
+      <div class="code syn"><pre>PROGRAM    = { STATEMENT } ;
+STATEMENT  = ( λ | IDENTIFIER, <span class="s">"="</span>, EXPRESSION | <span class="s">"Println"</span>, <span class="s">"("</span>, EXPRESSION, <span class="s">")"</span> ), <span class="s">"\n"</span> ;
+EXPRESSION = TERM, { (<span class="s">"+"</span> | <span class="s">"-"</span>), TERM } ;
+TERM       = FACTOR, { (<span class="s">"*"</span> | <span class="s">"/"</span>), FACTOR } ;
+FACTOR     = NUMBER | IDENTIFIER | (<span class="s">"+"</span> | <span class="s">"-"</span>), FACTOR | <span class="s">"("</span>, EXPRESSION, <span class="s">")"</span> ;
+IDENTIFIER = LETTER, { LETTER | DIGIT | <span class="s">"_"</span> } ;
+NUMBER     = DIGIT, { DIGIT } ;</pre></div>
+
+      <div class="antes-depois">
+        <div class="ad-col antes">
+          <span class="rot">v1.2 — a main imprime o valor da expressão</span>
+          <div class="code"><pre>Node raiz = Parser.run(codigoFonte);
+<span class="k">int</span> resultado = raiz.evaluate();
+System.out.println(resultado);</pre></div>
+        </div>
+        <div class="ad-col depois">
+          <span class="rot">v2.0 — quem imprime é o nó Print</span>
+          <div class="code"><pre>String codigoLimpo = PrePro.filter(conteudo);
+Node raiz = Parser.run(codigoLimpo);
+SymbolTable st = <span class="k">new</span> SymbolTable();
+raiz.evaluate(st);  <span class="c">// sem println aqui</span></pre></div>
+        </div>
+      </div>
+
+      <h4>Depurador animado — Roteiro 5</h4>
+      <p class="prose">Veja o <code class="inl">\n</code> virar o token <strong>END</strong> na fita, o <code class="inl">parseStatement()</code> escolher o caminho pelo primeiro token e o Block raiz ganhar um filho por linha (inclusive os NoOp das linhas vazias). Na fase 2, a <strong>SymbolTable</strong> nasce vazia e vai sendo preenchida: a linha pisca em laranja quando é escrita e fica azul quando é lida.</p>
+      <div data-java-dep="v2.0"></div>
+
+      <h4>Base de testes</h4>
+      <p class="prose">O roteiro pede um programa com bloco de instruções, atribuições com operações entre variáveis e impressão, além dos testes de variável inválida e de variável inexistente.</p>
+      <div class="tab-wrap">
+        <table class="tab">
+          <thead><tr><th>programa</th><th>saída</th><th>o que mostra</th></tr></thead>
+          <tbody>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.0" data-java-abrir="// Comentário!\nx1 = 3\ny2 = 4\nz_final = x1 + y2\nPrintln(z_final)">meta do roteiro</button></td><td class="sai">7</td><td class="pq">comentário, 3 atribuições, Println</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.0" data-java-abrir="x = 1\nx = x + 1\nPrintln(x * (4 + 1))\n\nPrintln(-x)">x = x + 1</button></td><td class="sai">10 · -2</td><td class="pq">setValue atualiza; linha vazia vira NoOp</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.0" data-java-abrir="1x = 3">1x = 3</button></td><td class="sai erro">[Parser] Unexpected token in statement: NUMERO</td><td class="pq">variável inválida: tokens válidos, ordem errada</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.0" data-java-abrir="_x = 3">_x = 3</button></td><td class="sai erro">[Lexer] Invalid Symbol _</td><td class="pq">variável inválida: '_' não começa token</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.0" data-java-abrir="Println(y)">Println(y)</button></td><td class="sai erro">[Semantic] Variable y not declared</td><td class="pq">variável inexistente: só a execução descobre</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.0" data-java-abrir="println(3)">println(3)</button></td><td class="sai erro">[Parser] Expected =</td><td class="pq">p minúsculo vira IDEN, e IDEN no começo da linha é atribuição</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.0" data-java-abrir="Println(3) 4">Println(3) 4</button></td><td class="sai erro">[Parser] Expected end of line</td><td class="pq">um statement por linha</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.0" data-java-abrir="x = 99999999999">x = 99999999999</button></td><td class="sai erro">NumberFormatException</td><td class="pq">Integer.parseInt estoura, sem prefixo</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Perguntas do Roteiro 5 · treino e extra credit</h4>
+      <p class="prose">Três tipos de pergunta: <strong>sobre o roteiro</strong> (conceitos), <strong>sobre as funções</strong> (o porquê de cada linha do seu código) e <strong>implemente você</strong>, no formato de extra credit e de prova: um símbolo novo, uma variável imutável… o que muda no Lexer, no Parser, na AST e na EBNF. Tente responder antes de abrir a resposta e marque <strong>✓ sei</strong> ou <strong>↺ revisar</strong>. As marcações ficam salvas neste navegador.</p>
+      <div data-perguntas="r5"></div>
+
+      <a class="proxima" href="#r6"><span><span class="lbl">Próxima seção</span><span class="tt">Roteiro 6 · booleanos, if, for e Scanln</span></span><span aria-hidden="true">→</span></a>
+    </section>
+
     <!-- ---------------- R6 ---------------- -->
     <section id="r6" class="painel">
       <div class="rot-head">
@@ -3583,7 +3676,7 @@ FACTOR          = NUMBER | IDENTIFIER | (<span class="s">"+"</span> | <span clas
 
       <h4>Depurador animado — Roteiro 6</h4>
       <p class="prose">Escreva um programa (ou escolha um exemplo) e aperte <strong>▶ Rodar</strong>. Na <strong>fita</strong>, cada token entra quando o Parser chama <code class="inl">selectNext()</code>; os consumidos ficam riscados e o <code class="inl">next</code> fica em destaque. A <strong>pilha</strong> mostra quem chamou quem: a moldura vermelha está rodando, a verde está devolvendo um valor. Na <strong>AST</strong>, os nós surgem enquanto o Parser os cria e, na fase 2, acendem conforme o <code class="inl">evaluate()</code> desce e mostram o valor (↩) quando sobem. O <strong>código</strong> é o método Java que está rodando, com a linha acesa. A faixa colorida embaixo da linha do tempo mostra as fases: verde é o Léxico, azul o Sintático, laranja o Semântico.</p>
-      <div data-r6></div>
+      <div data-java-dep="v2.1"></div>
 
       <h4>Base de testes</h4>
       <p class="prose">O roteiro pede um programa com laços e condicionais usando and/or/not e leitura do terminal. Clique numa entrada para carregá-la no depurador. As saídas abaixo foram conferidas rodando a referência Java de verdade.</p>
@@ -3591,16 +3684,16 @@ FACTOR          = NUMBER | IDENTIFIER | (<span class="s">"+"</span> | <span clas
         <table class="tab">
           <thead><tr><th>programa</th><th>stdin</th><th>saída</th><th>o que mostra</th></tr></thead>
           <tbody>
-            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="n = Scanln()\ni = 0\nfor i &lt; n &amp;&amp; !(i == 3) {\n    Println(i)\n    i = i + 1\n}" data-stdin="10\n">for i &lt; n &amp;&amp; !(i == 3)</button></td><td class="mono">10</td><td class="sai">0 1 2</td><td class="pq">laço com and + not; para no 3 mesmo com n = 10</td></tr>
-            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="x = Scanln()\ny = Scanln()\nif x &gt; y &amp;&amp; !(x == 0) {\n    Println(x)\n} else {\n    Println(y)\n}" data-stdin="7\n3\n">if x &gt; y &amp;&amp; !(x == 0)</button></td><td class="mono">7, 3</td><td class="sai">7</td><td class="pq">condicional com and + not + Scanln</td></tr>
-            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="i = 0\nfor i &lt; 3 {\n    j = 0\n    for j &lt; 2 {\n        Println(i * 10 + j)\n        j = j + 1\n    }\n    i = i + 1\n}">for dentro de for</button></td><td class="mono">—</td><td class="sai">0 1 10 11 20 21</td><td class="pq">Block dentro de Block: a pilha de evaluate() fica funda</td></tr>
-            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="Println(!1 == 0)">Println(!1 == 0)</button></td><td class="mono">—</td><td class="sai">1</td><td class="pq">! é unário, mais forte que ==: (!1) == 0</td></tr>
-            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="if 1 {\n    Println(1)\n}\nelse {\n    Println(2)\n}">else na linha de baixo</button></td><td class="mono">—</td><td class="sai erro">[Parser] Unexpected token in statement: ELSE</td><td class="pq">o "\n" depois do } já fechou o if</td></tr>
-            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="if 1 {\nPrintln(1)">bloco sem fechar</button></td><td class="mono">—</td><td class="sai erro">[Parser] Expected }</td><td class="pq">parseBlock encontrou EOF</td></tr>
-            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="x = 1 &amp; 2">x = 1 &amp; 2</button></td><td class="mono">—</td><td class="sai erro">[Lexer] Invalid Symbol &amp;</td><td class="pq">só existe &amp;&amp;</td></tr>
-            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="x = 2 &gt;= 1">x = 2 &gt;= 1</button></td><td class="mono">—</td><td class="sai erro">[Parser] Unexpected token in factor: ASSIGN</td><td class="pq">&gt;= não existe: vira GT e depois ASSIGN</td></tr>
-            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="x = Scanln()" data-stdin="abc\n">Scanln com texto</button></td><td class="mono">abc</td><td class="sai erro">[Semantic] Scanln: invalid integer abc</td><td class="pq">só na execução se sabe o que o usuário digitou</td></tr>
-            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="if 1 &gt; 0 || 1 / 0 == 0 {\n    Println(1)\n}">sem curto-circuito</button></td><td class="mono">—</td><td class="sai erro">[Semantic] Division by zero</td><td class="pq">o BinOp avalia os DOIS filhos antes de olhar o ||</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.1" data-java-abrir="n = Scanln()\ni = 0\nfor i &lt; n &amp;&amp; !(i == 3) {\n    Println(i)\n    i = i + 1\n}" data-stdin="10\n">for i &lt; n &amp;&amp; !(i == 3)</button></td><td class="mono">10</td><td class="sai">0 1 2</td><td class="pq">laço com and + not; para no 3 mesmo com n = 10</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.1" data-java-abrir="x = Scanln()\ny = Scanln()\nif x &gt; y &amp;&amp; !(x == 0) {\n    Println(x)\n} else {\n    Println(y)\n}" data-stdin="7\n3\n">if x &gt; y &amp;&amp; !(x == 0)</button></td><td class="mono">7, 3</td><td class="sai">7</td><td class="pq">condicional com and + not + Scanln</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.1" data-java-abrir="i = 0\nfor i &lt; 3 {\n    j = 0\n    for j &lt; 2 {\n        Println(i * 10 + j)\n        j = j + 1\n    }\n    i = i + 1\n}">for dentro de for</button></td><td class="mono">—</td><td class="sai">0 1 10 11 20 21</td><td class="pq">Block dentro de Block: a pilha de evaluate() fica funda</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.1" data-java-abrir="Println(!1 == 0)">Println(!1 == 0)</button></td><td class="mono">—</td><td class="sai">1</td><td class="pq">! é unário, mais forte que ==: (!1) == 0</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.1" data-java-abrir="if 1 {\n    Println(1)\n}\nelse {\n    Println(2)\n}">else na linha de baixo</button></td><td class="mono">—</td><td class="sai erro">[Parser] Unexpected token in statement: ELSE</td><td class="pq">o "\n" depois do } já fechou o if</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.1" data-java-abrir="if 1 {\nPrintln(1)">bloco sem fechar</button></td><td class="mono">—</td><td class="sai erro">[Parser] Expected }</td><td class="pq">parseBlock encontrou EOF</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.1" data-java-abrir="x = 1 &amp; 2">x = 1 &amp; 2</button></td><td class="mono">—</td><td class="sai erro">[Lexer] Invalid Symbol &amp;</td><td class="pq">só existe &amp;&amp;</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.1" data-java-abrir="x = 2 &gt;= 1">x = 2 &gt;= 1</button></td><td class="mono">—</td><td class="sai erro">[Parser] Unexpected token in factor: ASSIGN</td><td class="pq">&gt;= não existe: vira GT e depois ASSIGN</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.1" data-java-abrir="x = Scanln()" data-stdin="abc\n">Scanln com texto</button></td><td class="mono">abc</td><td class="sai erro">[Semantic] Scanln: invalid integer abc</td><td class="pq">só na execução se sabe o que o usuário digitou</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.1" data-java-abrir="if 1 &gt; 0 || 1 / 0 == 0 {\n    Println(1)\n}">sem curto-circuito</button></td><td class="mono">—</td><td class="sai erro">[Semantic] Division by zero</td><td class="pq">o BinOp avalia os DOIS filhos antes de olhar o ||</td></tr>
           </tbody>
         </table>
       </div>
@@ -3615,6 +3708,10 @@ FACTOR          = NUMBER | IDENTIFIER | (<span class="s">"+"</span> | <span clas
         <div class="ficha" style="padding:14px 16px"><strong>Laço infinito</strong><p style="margin:6px 0 0;font-size:14.5px;color:var(--ink-2)">Esquecer o <code class="inl">i = i + 1</code> trava o Java para sempre. O depurador para em 20 000 passos e avisa.</p></div>
       </div>
 
+      <h4>Perguntas do Roteiro 6 · treino e extra credit</h4>
+      <p class="prose">Mesmo formato do Roteiro 5: <strong>sobre o roteiro</strong>, <strong>sobre as funções</strong> e <strong>implemente você</strong> (<code class="inl">!=</code> e <code class="inl">&gt;=</code>, else if, for estilo C, break, repeat, tipagem forte…). Os exercícios adicionais do enunciado estão aqui.</p>
+      <div data-perguntas="r6"></div>
+
       <div class="prose" style="margin-top:22px">
         <h4>Extra credit</h4>
         <p><strong>if como expressão</strong> (<code class="inl">n = if x &gt; 2 { 5 } else { 3 }</code>): um novo caminho no FACTOR, com a maior precedência de todas, que devolve um nó de 3 filhos (condição, valor-então, valor-senão). O evaluate dele devolve um dos dois valores, em vez de 0. <strong>for estilo C</strong> (<code class="inl">for i = 0; i &lt; n; i = i + 1 { … }</code>) pode ser só açúcar sintático: o Parser monta <code class="inl">Block[ Assignment(init), While(cond, Block[ corpo…, Assignment(passo) ]) ]</code>, sem nenhuma classe nova.</p>
@@ -3622,7 +3719,7 @@ FACTOR          = NUMBER | IDENTIFIER | (<span class="s">"+"</span> | <span clas
 
       <a class="proxima" href="#colinha"><span><span class="lbl">Próxima seção</span><span class="tt">Colinha · Como acrescentar um operador</span></span><span aria-hidden="true">→</span></a>
     </section>
-<!-- /R6:secao -->
+<!-- /ADR:secoes -->
   </div>
 </section>
 
@@ -7546,7 +7643,7 @@ var DG = (function () {
 
 </script>
 
-<!-- R6:css -->
+<!-- ADR:css -->
 <style>
 /* ---------- Roteiro 6: depurador animado (Java) ---------- */
 .r6{border:1px solid var(--rule);border-radius:12px;background:#fff;box-shadow:var(--sh);margin:22px 0 10px;overflow:hidden}
@@ -7654,9 +7751,44 @@ var DG = (function () {
 .r6-teste{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
 @media (prefers-reduced-motion: reduce){.an-tk.r6-novo,.r6-n text.rv.r6-rv-novo,.an-e.r6-e-novo,.an-cod .l.on,.r6-tab tr.esc td,.r6-out-novo,.r6-caret{animation:none!important}.an-e.r6-e-novo{stroke-dashoffset:0}}
 
+/* ---------- perguntas de cada roteiro ---------- */
+.pg{margin:18px 0 8px}
+.pg-topo{position:sticky;top:78px;z-index:6;background:var(--bg);padding:10px 0;display:flex;flex-direction:column;gap:10px}
+.pg-prog{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.pg-barra{flex:1;min-width:180px;height:8px;border-radius:99px;background:var(--sunk2);display:flex;overflow:hidden}
+.pg-sei{background:var(--green);transition:width .3s ease}
+.pg-rev{background:#e0a458;transition:width .3s ease}
+.pg-conta{font:12.5px var(--m);color:var(--ink-2)}
+.pg-filtros{display:flex;gap:6px;flex-wrap:wrap}
+.pg-filtros .preset{font-family:var(--f);font-size:12.5px}
+.pg-lista{display:flex;flex-direction:column;gap:12px}
+.pg-card{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--syn);border-radius:10px;padding:14px 18px;display:flex;flex-direction:column;gap:8px}
+.pg-card.pg-extra{border-left-color:var(--sem)}
+.pg-card.marcou-sei{border-left-color:var(--green);background:#fbfefc}
+.pg-card.marcou-rev{border-left-color:#e0a458;background:#fffcf5}
+.pg-card header{display:flex;gap:10px;align-items:center}
+.pg-num{font:700 12px var(--m);color:#fff;background:var(--ink);border-radius:5px;padding:3px 8px}
+.pg-tag{font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:700;color:var(--ink-3)}
+.pg-extra .pg-tag{color:#8a5313}
+.pg-p{font-size:16px;font-weight:600;color:var(--ink)}
+.pg-p p{margin:0}
+.pg-dica summary{cursor:pointer;font-size:13px;color:var(--green);font-weight:650;width:max-content}
+.pg-dica p{margin:4px 0 0;font-size:14px;color:var(--ink-2)}
+.pg-acoes{display:flex;gap:8px;flex-wrap:wrap}
+.pg-acoes .btn{min-height:34px;padding:5px 12px;font-size:13px}
+.marcou-sei .pg-m[data-m=sei]{box-shadow:0 0 0 3px #14674c44}
+.marcou-rev .pg-m[data-m=rev]{box-shadow:0 0 0 3px #e0a45866;background:#fdf1ec}
+.pg-r{border-top:1px dashed var(--rule-2);padding-top:10px;font-size:15px;line-height:1.6;color:var(--ink);animation:an-entra .3s ease}
+.pg-r p{margin:0 0 10px}
+.pg-r ul{margin:0 0 10px;padding-left:1.3em}
+.pg-r li{margin-bottom:4px}
+.pg-code{margin:4px 0 12px;padding:12px 16px;font-size:12.5px;line-height:1.65}
+.pg-dep{font-family:var(--f);font-size:12.5px;margin:2px 6px 4px 0}
+@media(max-width:1040px){.pg-topo{top:0}}
+
 </style>
-<!-- /R6:css -->
-<!-- R6:js -->
+<!-- /ADR:css -->
+<!-- ADR:js -->
 <script>
 /* ============================================================================
    MOTOR — reimplementação em JavaScript de cada versão do compilador Java.
@@ -8805,17 +8937,17 @@ var DG = (function () {
 })(typeof window !== "undefined" ? window : this);
 
 </script>
-<script>window.R6_FONTE = {"src":"import java.nio.file.Files;\nimport java.nio.file.Paths;\nimport java.util.ArrayList;\nimport java.util.HashMap;\nimport java.util.Scanner;\n\n// ============================================================================\n// REFERÊNCIA DO ROTEIRO 6 (v2.1) usada pelo depurador do site.\n// É o main.java do Roteiro 5 (v2.0) com os acréscimos do Roteiro 6 marcados\n// com \"R6:\". Serve pra estudar - a sua versão é você quem escreve!\n// Os comentários \"//#chave\" no fim das linhas marcam a linha que o\n// depurador destaca; o site remove esses marcadores antes de mostrar.\n// ============================================================================\n\npublic class Main {\n    public static void main(String[] args) throws Exception {\n        String conteudo = new String(Files.readAllBytes(Paths.get(args[0])));\n        conteudo = conteudo + \"\\n\";\n\n        String codigoLimpo = PrePro.filter(conteudo);\n\n        Node raiz = Parser.run(codigoLimpo);\n\n        SymbolTable st = new SymbolTable();\n        raiz.evaluate(st);\n    }\n}\n\n// ===================== Pré-processamento =====================\nclass PrePro {\n    static String filter(String codigo) {\n        return codigo.replaceAll(\"//.*\", \"\");\n    }\n}\n\n// ===================== Tabela de Símbolos =====================\nclass Variable {\n    int value;\n\n    Variable(int value) {\n        this.value = value;\n    }\n}\n\nclass SymbolTable {\n    private HashMap<String, Variable> table = new HashMap<String, Variable>();\n\n    HashMap<String, Variable> getTable() {\n        return table;\n    }\n\n    void setTable(HashMap<String, Variable> table) {\n        this.table = table;\n    }\n\n    int getValue(String nome) {\n        if (!table.containsKey(nome)) {\n            throw new RuntimeException(\"[Semantic] Variable \" + nome + \" not declared\");\n        }\n        return table.get(nome).value;\n    }\n\n    void setValue(String nome, int valor) {\n        if (table.containsKey(nome)) {\n            table.get(nome).value = valor;\n        } else {\n            table.put(nome, new Variable(valor));\n        }\n    }\n}\n\n// ===================== Tokens =====================\n// R6: 12 tipos novos - operadores booleanos (AND, OR, NOT), relacionais\n// (EQ, GT, LT), palavras reservadas (IF, WHILE, ELSE, READ) e chaves\nenum TipoToken {\n    NUMERO, PLUS, MINUS, MULT, DIV, OPEN_PAR, CLOSE_PAR,\n    ASSIGN, END, PRINT, IDEN, EOF,\n    AND, OR, NOT, EQ, GT, LT,\n    IF, WHILE, ELSE, READ,\n    OPEN_BRA, CLOSE_BRA\n}\n\nclass Token {\n    TipoToken tipo;\n    int valor;\n    String nome;\n\n    Token(TipoToken tipo, int valor) {\n        this.tipo = tipo;\n        this.valor = valor;\n    }\n\n    Token(TipoToken tipo, String nome) {\n        this.tipo = tipo;\n        this.nome = nome;\n    }\n}\n\n// ===================== Lexer =====================\nclass Lexer {\n    String source;\n    int position;\n    Token next;\n\n    Lexer(String source) {\n        this.source = source;\n        this.position = 0;\n    }\n\n    void selectNext() {\n        while (position < source.length()\n                && Character.isWhitespace(source.charAt(position))\n                && source.charAt(position) != '\\n') {\n            position++;\n        }\n\n        if (position >= source.length()) {\n            next = new Token(TipoToken.EOF, 0);\n\n        } else if (source.charAt(position) == '\\n') {\n            next = new Token(TipoToken.END, 0);\n            position++;\n\n        } else if (source.charAt(position) == '+') {\n            next = new Token(TipoToken.PLUS, 0);\n            position++;\n\n        } else if (source.charAt(position) == '-') {\n            next = new Token(TipoToken.MINUS, 0);\n            position++;\n\n        } else if (source.charAt(position) == '*') {\n            next = new Token(TipoToken.MULT, 0);\n            position++;\n\n        } else if (source.charAt(position) == '/') {\n            next = new Token(TipoToken.DIV, 0);\n            position++;\n\n        } else if (source.charAt(position) == '(') {\n            next = new Token(TipoToken.OPEN_PAR, 0);\n            position++;\n\n        } else if (source.charAt(position) == ')') {\n            next = new Token(TipoToken.CLOSE_PAR, 0);\n            position++;\n\n        } else if (source.charAt(position) == '=') {\n            // R6: olha UM caractere à frente - \"==\" é comparação,\n            // \"=\" sozinho continua sendo atribuição\n            if (position + 1 < source.length() && source.charAt(position + 1) == '=') {\n                next = new Token(TipoToken.EQ, 0);\n                position += 2;\n            } else {\n                next = new Token(TipoToken.ASSIGN, 0);\n                position++;\n            }\n\n        } else if (source.charAt(position) == '&') {\n            // R6: \"&&\" é UM token - um '&' sozinho não existe na linguagem\n            if (position + 1 < source.length() && source.charAt(position + 1) == '&') {\n                next = new Token(TipoToken.AND, 0);\n                position += 2;\n            } else {\n                throw new RuntimeException(\"[Lexer] Invalid Symbol &\");\n            }\n\n        } else if (source.charAt(position) == '|') {\n            // R6: mesma ideia pro \"||\"\n            if (position + 1 < source.length() && source.charAt(position + 1) == '|') {\n                next = new Token(TipoToken.OR, 0);\n                position += 2;\n            } else {\n                throw new RuntimeException(\"[Lexer] Invalid Symbol |\");\n            }\n\n        } else if (source.charAt(position) == '!') {\n            next = new Token(TipoToken.NOT, 0);\n            position++;\n\n        } else if (source.charAt(position) == '>') {\n            next = new Token(TipoToken.GT, 0);\n            position++;\n\n        } else if (source.charAt(position) == '<') {\n            next = new Token(TipoToken.LT, 0);\n            position++;\n\n        } else if (source.charAt(position) == '{') {\n            next = new Token(TipoToken.OPEN_BRA, 0);\n            position++;\n\n        } else if (source.charAt(position) == '}') {\n            next = new Token(TipoToken.CLOSE_BRA, 0);\n            position++;\n\n        } else if (Character.isDigit(source.charAt(position))) {\n            String acumulado = \"\";\n            while (position < source.length() && Character.isDigit(source.charAt(position))) {\n                acumulado += source.charAt(position);\n                position++;\n            }\n            next = new Token(TipoToken.NUMERO, Integer.parseInt(acumulado));\n\n        } else if (Character.isLetter(source.charAt(position))) {\n            String acumulado = \"\";\n            while (position < source.length()\n                    && (Character.isLetterOrDigit(source.charAt(position)) || source.charAt(position) == '_')) {\n                acumulado += source.charAt(position);\n                position++;\n            }\n            // R6: mais palavras reservadas na mesma \"peneira\" do Println\n            if (acumulado.equals(\"Println\")) {\n                next = new Token(TipoToken.PRINT, 0);\n            } else if (acumulado.equals(\"if\")) {\n                next = new Token(TipoToken.IF, 0);\n            } else if (acumulado.equals(\"for\")) {\n                // em Go, \"for\" faz o papel do while - por isso o token é WHILE\n                next = new Token(TipoToken.WHILE, 0);\n            } else if (acumulado.equals(\"else\")) {\n                next = new Token(TipoToken.ELSE, 0);\n            } else if (acumulado.equals(\"Scanln\")) {\n                next = new Token(TipoToken.READ, 0);\n            } else {\n                next = new Token(TipoToken.IDEN, acumulado);\n            }\n\n        } else {\n            throw new RuntimeException(\"[Lexer] Invalid Symbol \" + source.charAt(position));\n        }\n    }\n}\n\n// ===================== AST =====================\nabstract class Node {\n    Object value;\n    ArrayList<Node> children = new ArrayList<Node>();\n\n    abstract int evaluate(SymbolTable st);\n}\n\nclass IntVal extends Node {\n    IntVal(int valor) {\n        this.value = valor;\n    }\n\n    int evaluate(SymbolTable st) {\n        return (Integer) value;\n    }\n}\n\nclass UnOp extends Node {\n    UnOp(String operador, Node operando) {\n        this.value = operador;\n        this.children.add(operando);\n    }\n\n    int evaluate(SymbolTable st) {\n        int resultado = children.get(0).evaluate(st);\n        if (value.equals(\"-\")) {\n            return -resultado;\n        } else if (value.equals(\"!\")) {\n            // R6: não existe booleano de verdade - 0 é falso, qualquer outro é verdadeiro\n            return (resultado == 0) ? 1 : 0;\n        } else {\n            return resultado;\n        }\n    }\n}\n\nclass BinOp extends Node {\n    BinOp(String operador, Node esquerdo, Node direito) {\n        this.value = operador;\n        this.children.add(esquerdo);\n        this.children.add(direito);\n    }\n\n    int evaluate(SymbolTable st) {\n        int esquerdo = children.get(0).evaluate(st);\n        int direito = children.get(1).evaluate(st);\n\n        if (value.equals(\"+\")) {\n            return esquerdo + direito;\n        } else if (value.equals(\"-\")) {\n            return esquerdo - direito;\n        } else if (value.equals(\"*\")) {\n            return esquerdo * direito;\n        } else if (value.equals(\"/\")) {\n            if (direito == 0) {\n                throw new RuntimeException(\"[Semantic] Division by zero\");\n            }\n            return esquerdo / direito;\n        } else if (value.equals(\"==\")) {\n            // R6: relacionais devolvem 1 (verdadeiro) ou 0 (falso)\n            return (esquerdo == direito) ? 1 : 0;\n        } else if (value.equals(\">\")) {\n            return (esquerdo > direito) ? 1 : 0;\n        } else if (value.equals(\"<\")) {\n            return (esquerdo < direito) ? 1 : 0;\n        } else if (value.equals(\"&&\")) {\n            // R6: repara que os DOIS filhos já foram avaliados lá em cima -\n            // aqui não tem curto-circuito como no && do Java\n            return (esquerdo != 0 && direito != 0) ? 1 : 0;\n        } else if (value.equals(\"||\")) {\n            return (esquerdo != 0 || direito != 0) ? 1 : 0;\n        } else {\n            throw new RuntimeException(\"[Semantic] Invalid operator \" + value);\n        }\n    }\n}\n\nclass Identifier extends Node {\n    Identifier(String nome) {\n        this.value = nome;\n    }\n\n    int evaluate(SymbolTable st) {\n        return st.getValue((String) value);\n    }\n}\n\nclass Print extends Node {\n    Print(Node expressao) {\n        this.children.add(expressao);\n    }\n\n    int evaluate(SymbolTable st) {\n        int resultado = children.get(0).evaluate(st);\n        System.out.println(resultado);\n        return 0;\n    }\n}\n\nclass Assignment extends Node {\n    Assignment(Node identificador, Node expressao) {\n        this.children.add(identificador);\n        this.children.add(expressao);\n    }\n\n    int evaluate(SymbolTable st) {\n        int valor = children.get(1).evaluate(st);\n        String nome = (String) children.get(0).value;\n        st.setValue(nome, valor);\n        return 0;\n    }\n}\n\nclass Block extends Node {\n    int evaluate(SymbolTable st) {\n        for (Node filho : children) {\n            filho.evaluate(st);\n        }\n        return 0;\n    }\n}\n\nclass NoOp extends Node {\n    int evaluate(SymbolTable st) {\n        return 0;\n    }\n}\n\n// R6: If tem 2 filhos (condição, bloco do \"então\") ou 3 (+ bloco do else)\nclass If extends Node {\n    If(Node condicao, Node entao, Node senao) {\n        this.children.add(condicao);\n        this.children.add(entao);\n        if (senao != null) {\n            this.children.add(senao);\n        }\n    }\n\n    int evaluate(SymbolTable st) {\n        if (children.get(0).evaluate(st) != 0) {\n            children.get(1).evaluate(st);\n        } else if (children.size() > 2) {\n            children.get(2).evaluate(st);\n        }\n        return 0;\n    }\n}\n\n// R6: While tem sempre 2 filhos - a condição é REAVALIADA a cada volta\nclass While extends Node {\n    While(Node condicao, Node corpo) {\n        this.children.add(condicao);\n        this.children.add(corpo);\n    }\n\n    int evaluate(SymbolTable st) {\n        while (children.get(0).evaluate(st) != 0) {\n            children.get(1).evaluate(st);\n        }\n        return 0;\n    }\n}\n\n// R6: Read não tem filhos - o valor vem de fora do programa (do terminal)\nclass Read extends Node {\n    // UM Scanner só pro programa inteiro: se cada Scanln criasse o seu,\n    // o primeiro poderia \"engolir\" no buffer linhas que eram do segundo\n    static Scanner scanner = new Scanner(System.in);\n\n    int evaluate(SymbolTable st) {\n        if (!scanner.hasNextLine()) {\n            throw new RuntimeException(\"[Semantic] Scanln: no input available\");\n        }\n        String linha = scanner.nextLine().trim();\n        try {\n            return Integer.parseInt(linha);\n        } catch (NumberFormatException e) {\n            throw new RuntimeException(\"[Semantic] Scanln: invalid integer \" + linha);\n        }\n    }\n}\n\n// ===================== Parser =====================\nclass Parser {\n    static Lexer lexer;\n\n    static Node parseFactor() {\n        if (lexer.next.tipo == TipoToken.NUMERO) {\n            Node node = new IntVal(lexer.next.valor);\n            lexer.selectNext();\n            return node;\n\n        } else if (lexer.next.tipo == TipoToken.PLUS) {\n            lexer.selectNext();\n            Node filho = parseFactor();\n            return new UnOp(\"+\", filho);\n\n        } else if (lexer.next.tipo == TipoToken.MINUS) {\n            lexer.selectNext();\n            Node filho = parseFactor();\n            return new UnOp(\"-\", filho);\n\n        } else if (lexer.next.tipo == TipoToken.NOT) {\n            // R6: \"!\" é unário, igualzinho ao \"-\", só muda o operador\n            lexer.selectNext();\n            Node filho = parseFactor();\n            return new UnOp(\"!\", filho);\n\n        } else if (lexer.next.tipo == TipoToken.OPEN_PAR) {\n            lexer.selectNext();\n            // R6: dentro do parênteses agora cabe uma expressão BOOLEANA inteira\n            Node node = parseBoolExpression();\n            if (lexer.next.tipo != TipoToken.CLOSE_PAR) {\n                throw new RuntimeException(\"[Parser] Expected )\");\n            }\n            lexer.selectNext();\n            return node;\n\n        } else if (lexer.next.tipo == TipoToken.IDEN) {\n            Node node = new Identifier(lexer.next.nome);\n            lexer.selectNext();\n            return node;\n\n        } else if (lexer.next.tipo == TipoToken.READ) {\n            // R6: Scanln ( ) - é um FACTOR porque devolve um valor, dá pra\n            // usar no meio de uma conta: x = Scanln() + 1\n            lexer.selectNext();\n            if (lexer.next.tipo != TipoToken.OPEN_PAR) {\n                throw new RuntimeException(\"[Parser] Expected (\");\n            }\n            lexer.selectNext();\n            if (lexer.next.tipo != TipoToken.CLOSE_PAR) {\n                throw new RuntimeException(\"[Parser] Expected )\");\n            }\n            lexer.selectNext();\n            return new Read();\n\n        } else {\n            throw new RuntimeException(\"[Parser] Unexpected token in factor: \" + lexer.next.tipo);\n        }\n    }\n\n    static Node parseTerm() {\n        Node node = parseFactor();\n        while (lexer.next.tipo == TipoToken.MULT || lexer.next.tipo == TipoToken.DIV) {\n            String operador = (lexer.next.tipo == TipoToken.MULT) ? \"*\" : \"/\";\n            lexer.selectNext();\n            Node direito = parseFactor();\n            node = new BinOp(operador, node, direito);\n        }\n        return node;\n    }\n\n    static Node parseExpression() {\n        Node node = parseTerm();\n        while (lexer.next.tipo == TipoToken.PLUS || lexer.next.tipo == TipoToken.MINUS) {\n            String operador = (lexer.next.tipo == TipoToken.PLUS) ? \"+\" : \"-\";\n            lexer.selectNext();\n            Node direito = parseTerm();\n            node = new BinOp(operador, node, direito);\n        }\n        return node;\n    }\n\n    // R6: mesmo molde do parseExpression, um degrau ACIMA na precedência:\n    // REL_EXPRESSION = EXPRESSION, { (\"==\" | \">\" | \"<\"), EXPRESSION }\n    static Node parseRelExpression() {\n        Node node = parseExpression();\n        while (lexer.next.tipo == TipoToken.EQ || lexer.next.tipo == TipoToken.GT || lexer.next.tipo == TipoToken.LT) {\n            String operador = (lexer.next.tipo == TipoToken.EQ) ? \"==\" : (lexer.next.tipo == TipoToken.GT) ? \">\" : \"<\";\n            lexer.selectNext();\n            Node direito = parseExpression();\n            node = new BinOp(operador, node, direito);\n        }\n        return node;\n    }\n\n    // R6: BOOL_TERM = REL_EXPRESSION, { \"&&\", REL_EXPRESSION }\n    static Node parseBoolTerm() {\n        Node node = parseRelExpression();\n        while (lexer.next.tipo == TipoToken.AND) {\n            lexer.selectNext();\n            Node direito = parseRelExpression();\n            node = new BinOp(\"&&\", node, direito);\n        }\n        return node;\n    }\n\n    // R6: BOOL_EXPRESSION = BOOL_TERM, { \"||\", BOOL_TERM } - o degrau mais\n    // de cima: || é quem tem a MENOR precedência de todas\n    static Node parseBoolExpression() {\n        Node node = parseBoolTerm();\n        while (lexer.next.tipo == TipoToken.OR) {\n            lexer.selectNext();\n            Node direito = parseBoolTerm();\n            node = new BinOp(\"||\", node, direito);\n        }\n        return node;\n    }\n\n    // R6: BLOCK = \"{\", { STATEMENT }, \"}\" - parecido com o parseProgram,\n    // só que o laço para no \"}\" em vez de parar no EOF\n    static Node parseBlock() {\n        if (lexer.next.tipo != TipoToken.OPEN_BRA) {\n            throw new RuntimeException(\"[Parser] Expected {\");\n        }\n        lexer.selectNext();\n        Node bloco = new Block();\n        while (lexer.next.tipo != TipoToken.CLOSE_BRA) {\n            if (lexer.next.tipo == TipoToken.EOF) {\n                throw new RuntimeException(\"[Parser] Expected }\");\n            }\n            Node statement = parseStatement();\n            bloco.children.add(statement);\n        }\n        lexer.selectNext();\n        return bloco;\n    }\n\n    static Node parseStatement() {\n\n        if (lexer.next.tipo == TipoToken.PRINT) {\n            lexer.selectNext();\n            if (lexer.next.tipo != TipoToken.OPEN_PAR) {\n                throw new RuntimeException(\"[Parser] Expected (\");\n            }\n            lexer.selectNext();\n            Node expressao = parseBoolExpression();\n            if (lexer.next.tipo != TipoToken.CLOSE_PAR) {\n                throw new RuntimeException(\"[Parser] Expected )\");\n            }\n            lexer.selectNext();\n            Node printNode = new Print(expressao);\n\n            if (lexer.next.tipo != TipoToken.END) {\n                throw new RuntimeException(\"[Parser] Expected end of line\");\n            }\n            lexer.selectNext();\n            return printNode;\n\n        } else if (lexer.next.tipo == TipoToken.IDEN) {\n            String nome = lexer.next.nome;\n            Node idNode = new Identifier(nome);\n            lexer.selectNext();\n\n            if (lexer.next.tipo != TipoToken.ASSIGN) {\n                throw new RuntimeException(\"[Parser] Expected =\");\n            }\n            lexer.selectNext();\n\n            Node expressao = parseBoolExpression();\n            Node assignNode = new Assignment(idNode, expressao);\n\n            if (lexer.next.tipo != TipoToken.END) {\n                throw new RuntimeException(\"[Parser] Expected end of line\");\n            }\n            lexer.selectNext();\n            return assignNode;\n\n        } else if (lexer.next.tipo == TipoToken.IF) {\n            // R6: IF = \"if\", BOOL_EXPRESSION, BLOCK, [ \"else\", BLOCK ]\n            lexer.selectNext();\n            Node condicao = parseBoolExpression();\n            Node entao = parseBlock();\n            Node senao = null;\n            if (lexer.next.tipo == TipoToken.ELSE) {\n                lexer.selectNext();\n                senao = parseBlock();\n            }\n            Node ifNode = new If(condicao, entao, senao);\n\n            if (lexer.next.tipo != TipoToken.END) {\n                throw new RuntimeException(\"[Parser] Expected end of line\");\n            }\n            lexer.selectNext();\n            return ifNode;\n\n        } else if (lexer.next.tipo == TipoToken.WHILE) {\n            // R6: FOR = \"for\", BOOL_EXPRESSION, BLOCK - o \"while\" do Go\n            lexer.selectNext();\n            Node condicao = parseBoolExpression();\n            Node corpo = parseBlock();\n            Node whileNode = new While(condicao, corpo);\n\n            if (lexer.next.tipo != TipoToken.END) {\n                throw new RuntimeException(\"[Parser] Expected end of line\");\n            }\n            lexer.selectNext();\n            return whileNode;\n\n        } else if (lexer.next.tipo == TipoToken.END) {\n            lexer.selectNext();\n            return new NoOp();\n\n        } else {\n            throw new RuntimeException(\"[Parser] Unexpected token in statement: \" + lexer.next.tipo);\n        }\n    }\n\n    static Node parseProgram() {\n        Node bloco = new Block();\n        while (lexer.next.tipo != TipoToken.EOF) {\n            Node statement = parseStatement();\n            bloco.children.add(statement);\n        }\n        return bloco;\n    }\n\n    static Node run(String code) {\n        lexer = new Lexer(code);\n        lexer.selectNext();\n        Node raiz = parseProgram();\n\n        if (lexer.next.tipo != TipoToken.EOF) {\n            throw new RuntimeException(\"[Parser] Unexpected token \" + lexer.next.tipo);\n        }\n        return raiz;\n    }\n}\n","linhas":{"main_read":17,"main_nl":18,"main_prepro":20,"main_parse":22,"main_st":24,"main_eval":25,"prepro":32,"st_get_chk":57,"st_get_err":58,"st_get_ret":60,"st_set_chk":64,"st_set_upd":65,"st_set_new":67,"lex_ws":111,"lex_eof":118,"lex_end":121,"lex_plus":125,"lex_minus":129,"lex_mult":133,"lex_div":137,"lex_open":141,"lex_close":145,"lex_eq_chk":151,"lex_eq":152,"lex_assign":155,"lex_and_chk":161,"lex_and":162,"lex_and_err":165,"lex_or_chk":170,"lex_or":171,"lex_or_err":174,"lex_not":178,"lex_gt":182,"lex_lt":186,"lex_obra":190,"lex_cbra":194,"lex_num_loop":199,"lex_num":203,"lex_word_loop":207,"lex_kw_chk":213,"lex_print":214,"lex_if":216,"lex_while":219,"lex_else":221,"lex_read":223,"lex_iden":225,"lex_err":229,"ev_int":248,"ev_un_child":259,"ev_un_neg":261,"ev_un_not":264,"ev_un_pos":266,"ev_bin_l":279,"ev_bin_r":280,"ev_bin_plus":283,"ev_bin_minus":285,"ev_bin_mult":287,"ev_bin_div_chk":289,"ev_bin_div_err":290,"ev_bin_div":292,"ev_bin_eq":295,"ev_bin_gt":297,"ev_bin_lt":299,"ev_bin_and":303,"ev_bin_or":305,"ev_iden":318,"ev_print_child":328,"ev_print_out":329,"ev_asg_child":341,"ev_asg_name":342,"ev_asg_set":343,"ev_block_for":350,"ev_block_child":351,"ev_noop":359,"ev_if_cond":374,"ev_if_then":375,"ev_if_has_else":376,"ev_if_else":377,"ev_if_end":379,"ev_while_cond":391,"ev_while_body":392,"ev_while_end":394,"ev_read_chk":405,"ev_read_eof":406,"ev_read_line":408,"ev_read_ret":410,"ev_read_err":412,"pf_enter":421,"pf_num_chk":422,"pf_num":423,"pf_num_next":424,"pf_plus_chk":427,"pf_plus_next":428,"pf_plus_call":429,"pf_plus_ret":430,"pf_minus_chk":432,"pf_minus_next":433,"pf_minus_call":434,"pf_minus_ret":435,"pf_not_chk":437,"pf_not_next":439,"pf_not_call":440,"pf_not_ret":441,"pf_par_chk":443,"pf_par_next":444,"pf_par_call":446,"pf_par_close_chk":447,"pf_par_err":448,"pf_par_close_next":450,"pf_par_ret":451,"pf_iden_chk":453,"pf_iden":454,"pf_iden_next":455,"pf_read_chk":458,"pf_read_next":461,"pf_read_open_chk":462,"pf_read_open_err":463,"pf_read_open_next":465,"pf_read_close_chk":466,"pf_read_close_err":467,"pf_read_close_next":469,"pf_read_ret":470,"pf_err":473,"pt_enter":477,"pt_first":478,"pt_while":479,"pt_op":480,"pt_op_next":481,"pt_right":482,"pt_binop":483,"pt_ret":485,"pe_enter":488,"pe_first":489,"pe_while":490,"pe_op":491,"pe_op_next":492,"pe_right":493,"pe_binop":494,"pe_ret":496,"pr_enter":501,"pr_first":502,"pr_while":503,"pr_op":504,"pr_op_next":505,"pr_right":506,"pr_binop":507,"pr_ret":509,"pbt_enter":513,"pbt_first":514,"pbt_while":515,"pbt_op_next":516,"pbt_right":517,"pbt_binop":518,"pbt_ret":520,"pbe_enter":525,"pbe_first":526,"pbe_while":527,"pbe_op_next":528,"pbe_right":529,"pbe_binop":530,"pbe_ret":532,"pb_enter":537,"pb_open_chk":538,"pb_open_err":539,"pb_open_next":541,"pb_block":542,"pb_while":543,"pb_eof_chk":544,"pb_eof_err":545,"pb_stmt":547,"pb_add":548,"pb_close_next":550,"pb_ret":551,"ps_enter":554,"ps_print_chk":556,"ps_print_next":557,"ps_print_open_chk":558,"ps_print_open_err":559,"ps_print_open_next":561,"ps_print_expr":562,"ps_print_close_chk":563,"ps_print_close_err":564,"ps_print_close_next":566,"ps_print_node":567,"ps_print_end_chk":569,"ps_print_end_err":570,"ps_print_end_next":572,"ps_print_ret":573,"ps_iden_chk":575,"ps_iden_name":576,"ps_iden_node":577,"ps_iden_next":578,"ps_assign_chk":580,"ps_assign_err":581,"ps_assign_next":583,"ps_asg_expr":585,"ps_asg_node":586,"ps_asg_end_chk":588,"ps_asg_end_err":589,"ps_asg_end_next":591,"ps_asg_ret":592,"ps_if_chk":594,"ps_if_next":596,"ps_if_cond":597,"ps_if_then":598,"ps_else_chk":600,"ps_else_next":601,"ps_else_block":602,"ps_if_node":604,"ps_if_end_chk":606,"ps_if_end_err":607,"ps_if_end_next":609,"ps_if_ret":610,"ps_while_chk":612,"ps_while_next":614,"ps_while_cond":615,"ps_while_body":616,"ps_while_node":617,"ps_while_end_chk":619,"ps_while_end_err":620,"ps_while_end_next":622,"ps_while_ret":623,"ps_empty_chk":625,"ps_empty_next":626,"ps_noop":627,"ps_err":630,"pp_enter":634,"pp_block":635,"pp_while":636,"pp_stmt":637,"pp_add":638,"pp_ret":640,"run_enter":643,"run_lexer":644,"run_first":645,"run_prog":646,"run_eof_chk":648,"run_err":649,"run_ret":651}};</script>
+<script>window.JAVA_FONTES = {"v2.0":{"src":"import java.nio.file.Files;\nimport java.nio.file.Paths;\nimport java.util.ArrayList;\nimport java.util.HashMap;\n\npublic class Main {\n    public static void main(String[] args) throws Exception {\n        // agora a entrada vem de um ARQUIVO, não mais de args[0] direto como texto -\n        // args[0] é o NOME do arquivo, precisamos ler o conteúdo dele\n        String conteudo = new String(Files.readAllBytes(Paths.get(args[0])));\n        // o enunciado pede pra garantir um \"\\n\" no final, senão a última linha\n        // do arquivo não teria um token END pra fechar o último Statement\n        conteudo = conteudo + \"\\n\";\n\n        // Pré-processamento ACONTECE ANTES do Lexer - remove comentários\n        // antes de qualquer análise léxica começar\n        String codigoLimpo = PrePro.filter(conteudo);\n\n        // Parser.run() agora começa em parseProgram(), não mais parseExpression() -\n        // o ponto de entrada da linguagem agora é \"um programa inteiro\", não uma expressão só\n        Node raiz = Parser.run(codigoLimpo);\n\n        // cria a tabela de símbolos UMA VEZ, fora da árvore, e passa como\n        // argumento pro evaluate() da raiz - ela vai ser repassada adiante,\n        // pra baixo, em CADA chamada de evaluate() dos filhos\n        SymbolTable st = new SymbolTable();\n        raiz.evaluate(st);\n        // repara que não tem \"System.out.println(raiz.evaluate(st))\" aqui -\n        // quem imprime agora é o próprio nó Print, lá dentro do evaluate()\n    }\n}\n\n// ===================== Pré-processamento =====================\nclass PrePro {\n    // remove tudo de \"//\" até o fim da linha, mas preserva o \"\\n\" -\n    // por isso a regex \"//.*\" e não \"//.*\\n\": o ponto (.) já não cruza\n    // quebra de linha por padrão em Java, então o \\n sobrevive sozinho\n    static String filter(String codigo) {\n        return codigo.replaceAll(\"//.*\", \"\");\n    }\n}\n\n// ===================== Tabela de Símbolos =====================\n// Variable é só um \"envelope\" pro valor de uma variável - existe separado\n// de int puro porque no futuro pode ganhar mais atributos (tipo do dado,\n// somente-leitura, etc), sem precisar mudar a SymbolTable\nclass Variable {\n    int value;\n\n    Variable(int value) {\n        this.value = value;\n    }\n}\n\nclass SymbolTable {\n    // atributo \"table\" tratado como property (getter/setter), guardando\n    // nome da variável -> objeto Variable\n    private HashMap<String, Variable> table = new HashMap<String, Variable>();\n\n    HashMap<String, Variable> getTable() {\n        return table;\n    }\n\n    void setTable(HashMap<String, Variable> table) {\n        this.table = table;\n    }\n\n    // busca o VALOR de uma variável - erro semântico se ela nunca foi criada\n    int getValue(String nome) {\n        if (!table.containsKey(nome)) {\n            throw new RuntimeException(\"[Semantic] Variable \" + nome + \" not declared\");\n        }\n        return table.get(nome).value;\n    }\n\n    // cria (se não existir) ou atualiza (se já existir) o valor de uma variável\n    void setValue(String nome, int valor) {\n        if (table.containsKey(nome)) {\n            table.get(nome).value = valor;\n        } else {\n            table.put(nome, new Variable(valor));\n        }\n    }\n}\n\n// ===================== Tokens =====================\n// 4 tipos novos: ASSIGN ('='), END ('\\n'), PRINT (palavra reservada\n// \"Println\"), IDEN (identificador/nome de variável)\nenum TipoToken {\n    NUMERO, PLUS, MINUS, MULT, DIV, OPEN_PAR, CLOSE_PAR,\n    ASSIGN, END, PRINT, IDEN, EOF\n}\n\nclass Token {\n    TipoToken tipo;\n    int valor;   // usado só quando tipo == NUMERO\n    String nome; // usado só quando tipo == IDEN (o nome da variável)\n\n    // construtor pra tokens \"normais\" (número ou símbolos sem nome associado)\n    Token(TipoToken tipo, int valor) {\n        this.tipo = tipo;\n        this.valor = valor;\n    }\n\n    // construtor separado pra IDEN, que carrega uma String (o nome), não um int\n    Token(TipoToken tipo, String nome) {\n        this.tipo = tipo;\n        this.nome = nome;\n    }\n}\n\n// ===================== Lexer =====================\nclass Lexer {\n    String source;\n    int position;\n    Token next;\n\n    Lexer(String source) {\n        this.source = source;\n        this.position = 0;\n    }\n\n    void selectNext() {\n        // pula espaço e tab, mas CUIDADO: '\\n' também conta como\n        // \"whitespace\" pro Character.isWhitespace(), só que agora ele\n        // precisa virar um TOKEN (END), não ser silenciosamente ignorado -\n        // por isso a condição aqui exclui explicitamente o '\\n'\n        while (position < source.length()\n                && Character.isWhitespace(source.charAt(position))\n                && source.charAt(position) != '\\n') {\n            position++;\n        }\n\n        if (position >= source.length()) {\n            next = new Token(TipoToken.EOF, 0);\n\n        } else if (source.charAt(position) == '\\n') {\n            // quebra de linha agora é um token de verdade - marca fim de Statement\n            next = new Token(TipoToken.END, 0);\n            position++;\n\n        } else if (source.charAt(position) == '+') {\n            next = new Token(TipoToken.PLUS, 0);\n            position++;\n\n        } else if (source.charAt(position) == '-') {\n            next = new Token(TipoToken.MINUS, 0);\n            position++;\n\n        } else if (source.charAt(position) == '*') {\n            next = new Token(TipoToken.MULT, 0);\n            position++;\n\n        } else if (source.charAt(position) == '/') {\n            next = new Token(TipoToken.DIV, 0);\n            position++;\n\n        } else if (source.charAt(position) == '(') {\n            next = new Token(TipoToken.OPEN_PAR, 0);\n            position++;\n\n        } else if (source.charAt(position) == ')') {\n            next = new Token(TipoToken.CLOSE_PAR, 0);\n            position++;\n\n        } else if (source.charAt(position) == '=') {\n            next = new Token(TipoToken.ASSIGN, 0);\n            position++;\n\n        } else if (Character.isDigit(source.charAt(position))) {\n            String acumulado = \"\";\n            while (position < source.length() && Character.isDigit(source.charAt(position))) {\n                acumulado += source.charAt(position);\n                position++;\n            }\n            next = new Token(TipoToken.NUMERO, Integer.parseInt(acumulado));\n\n        } else if (Character.isLetter(source.charAt(position))) {\n            // identificador PRECISA começar com letra (é por isso que \"1x\"\n            // e \"_x\" são inválidos - eles caem nos outros ramos, não neste)\n            // mas pode CONTINUAR com letra, dígito ou underscore\n            String acumulado = \"\";\n            while (position < source.length()\n                    && (Character.isLetterOrDigit(source.charAt(position)) || source.charAt(position) == '_')) {\n                acumulado += source.charAt(position);\n                position++;\n            }\n            // truque do enunciado: trata como identificador comum primeiro,\n            // e só DEPOIS checa se bateu com uma palavra reservada\n            if (acumulado.equals(\"Println\")) {\n                next = new Token(TipoToken.PRINT, 0);\n            } else {\n                next = new Token(TipoToken.IDEN, acumulado);\n            }\n\n        } else {\n            throw new RuntimeException(\"[Lexer] Invalid Symbol \" + source.charAt(position));\n        }\n    }\n}\n\n// ===================== AST =====================\nabstract class Node {\n    Object value;\n    ArrayList<Node> children = new ArrayList<Node>();\n\n    // MUDANÇA-CHAVE do roteiro: evaluate() agora recebe a SymbolTable -\n    // toda variável precisa desse \"estado compartilhado\" pra saber os valores\n    abstract int evaluate(SymbolTable st);\n}\n\nclass IntVal extends Node {\n    IntVal(int valor) {\n        this.value = valor;\n    }\n\n    int evaluate(SymbolTable st) {\n        // IntVal nem usa o \"st\" de verdade - só recebe porque a assinatura\n        // do método é a mesma pra todo mundo (polimorfismo)\n        return (Integer) value;\n    }\n}\n\nclass UnOp extends Node {\n    UnOp(String operador, Node operando) {\n        this.value = operador;\n        this.children.add(operando);\n    }\n\n    int evaluate(SymbolTable st) {\n        // repassa \"st\" pro filho - ele pode precisar dela lá dentro\n        // (por exemplo, se o operando for uma variável)\n        int resultado = children.get(0).evaluate(st);\n        if (value.equals(\"-\")) {\n            return -resultado;\n        } else {\n            return resultado;\n        }\n    }\n}\n\nclass BinOp extends Node {\n    BinOp(String operador, Node esquerdo, Node direito) {\n        this.value = operador;\n        this.children.add(esquerdo);\n        this.children.add(direito);\n    }\n\n    int evaluate(SymbolTable st) {\n        int esquerdo = children.get(0).evaluate(st);\n        int direito = children.get(1).evaluate(st);\n\n        if (value.equals(\"+\")) {\n            return esquerdo + direito;\n        } else if (value.equals(\"-\")) {\n            return esquerdo - direito;\n        } else if (value.equals(\"*\")) {\n            return esquerdo * direito;\n        } else if (value.equals(\"/\")) {\n            if (direito == 0) {\n                throw new RuntimeException(\"[Semantic] Division by zero\");\n            }\n            return esquerdo / direito;\n        } else {\n            throw new RuntimeException(\"[Semantic] Invalid operator \" + value);\n        }\n    }\n}\n\n// Identifier: folha da árvore, representa o USO de uma variável (ex: em \"x + 1\")\n// repara a diferença de Assignment: aqui SIM queremos o VALOR atual da variável\nclass Identifier extends Node {\n    Identifier(String nome) {\n        this.value = nome; // guarda o NOME (String), não o valor numérico\n    }\n\n    int evaluate(SymbolTable st) {\n        // consulta a tabela de símbolos pelo nome, pra saber o valor ATUAL\n        return st.getValue((String) value);\n    }\n}\n\n// Print: 1 filho, imprime o resultado do filho - não retorna nada de útil\nclass Print extends Node {\n    Print(Node expressao) {\n        this.children.add(expressao);\n    }\n\n    int evaluate(SymbolTable st) {\n        int resultado = children.get(0).evaluate(st);\n        System.out.println(resultado);\n        return 0; // dummy - Print não tem \"resultado\" que alguém use depois\n    }\n}\n\n// Assignment: 2 filhos, mas NÃO é um BinOp - a semântica é bem diferente:\n// filho[0] é o NOME da variável (não se calcula \"o valor\" de um nome),\n// filho[1] é a expressão que calcula o valor a ser guardado\nclass Assignment extends Node {\n    Assignment(Node identificador, Node expressao) {\n        this.children.add(identificador); // índice 0: NÃO chamamos evaluate() nele\n        this.children.add(expressao);     // índice 1: esse sim é calculado\n    }\n\n    int evaluate(SymbolTable st) {\n        int valor = children.get(1).evaluate(st); // calcula o lado direito\n        // pega o NOME direto do value do Identifier - \"não faz sentido\"\n        // chamar evaluate() nele, porque isso tentaria BUSCAR um valor\n        // que ainda nem existe (ou existe com valor antigo, que não é o que queremos)\n        String nome = (String) children.get(0).value;\n        st.setValue(nome, valor); // guarda na tabela de símbolos\n        return 0; // dummy - Assignment também não devolve nada útil\n    }\n}\n\n// Block: representa o PROGRAMA inteiro (ou qualquer bloco de instruções) -\n// número de filhos é variável, um filho por linha/instrução do arquivo\nclass Block extends Node {\n    int evaluate(SymbolTable st) {\n        // simplesmente executa cada instrução, uma atrás da outra, em ordem\n        for (Node filho : children) {\n            filho.evaluate(st);\n        }\n        return 0; // dummy\n    }\n}\n\n// NoOp: representa uma linha vazia - literalmente não faz nada\nclass NoOp extends Node {\n    int evaluate(SymbolTable st) {\n        return 0; // não faz mesmo nada - é um \"não-operador\"\n    }\n}\n\n// ===================== Parser =====================\nclass Parser {\n    static Lexer lexer;\n\n    static Node parseFactor() {\n        if (lexer.next.tipo == TipoToken.NUMERO) {\n            Node node = new IntVal(lexer.next.valor);\n            lexer.selectNext();\n            return node;\n\n        } else if (lexer.next.tipo == TipoToken.PLUS) {\n            lexer.selectNext();\n            Node filho = parseFactor();\n            return new UnOp(\"+\", filho);\n\n        } else if (lexer.next.tipo == TipoToken.MINUS) {\n            lexer.selectNext();\n            Node filho = parseFactor();\n            return new UnOp(\"-\", filho);\n\n        } else if (lexer.next.tipo == TipoToken.OPEN_PAR) {\n            lexer.selectNext();\n            Node node = parseExpression();\n            if (lexer.next.tipo != TipoToken.CLOSE_PAR) {\n                throw new RuntimeException(\"[Parser] Expected )\");\n            }\n            lexer.selectNext();\n            return node;\n\n        } else if (lexer.next.tipo == TipoToken.IDEN) {\n            // NOVO: usar uma variável dentro de uma expressão, tipo \"x + 1\"\n            Node node = new Identifier(lexer.next.nome);\n            lexer.selectNext();\n            return node;\n\n        } else {\n            throw new RuntimeException(\"[Parser] Unexpected token in factor: \" + lexer.next.tipo);\n        }\n    }\n\n    static Node parseTerm() {\n        Node node = parseFactor();\n        while (lexer.next.tipo == TipoToken.MULT || lexer.next.tipo == TipoToken.DIV) {\n            String operador = (lexer.next.tipo == TipoToken.MULT) ? \"*\" : \"/\";\n            lexer.selectNext();\n            Node direito = parseFactor();\n            node = new BinOp(operador, node, direito);\n        }\n        return node;\n    }\n\n    static Node parseExpression() {\n        Node node = parseTerm();\n        while (lexer.next.tipo == TipoToken.PLUS || lexer.next.tipo == TipoToken.MINUS) {\n            String operador = (lexer.next.tipo == TipoToken.PLUS) ? \"+\" : \"-\";\n            lexer.selectNext();\n            Node direito = parseTerm();\n            node = new BinOp(operador, node, direito);\n        }\n        return node;\n    }\n\n    // NOVO: trata UMA instrução (uma \"linha\" da linguagem), decidindo qual\n    // das 3 alternativas seguir só olhando o token atual\n    static Node parseStatement() {\n\n        if (lexer.next.tipo == TipoToken.PRINT) {\n            // Println ( EXPRESSION )\n            lexer.selectNext(); // consome \"Println\"\n            if (lexer.next.tipo != TipoToken.OPEN_PAR) {\n                throw new RuntimeException(\"[Parser] Expected (\");\n            }\n            lexer.selectNext(); // consome \"(\"\n            Node expressao = parseExpression();\n            if (lexer.next.tipo != TipoToken.CLOSE_PAR) {\n                throw new RuntimeException(\"[Parser] Expected )\");\n            }\n            lexer.selectNext(); // consome \")\"\n            Node printNode = new Print(expressao);\n\n            if (lexer.next.tipo != TipoToken.END) {\n                throw new RuntimeException(\"[Parser] Expected end of line\");\n            }\n            lexer.selectNext(); // consome o '\\n' que fecha a instrução\n            return printNode;\n\n        } else if (lexer.next.tipo == TipoToken.IDEN) {\n            // IDENTIFIER \"=\" EXPRESSION\n            String nome = lexer.next.nome; // guarda o nome ANTES de avançar\n            Node idNode = new Identifier(nome);\n            lexer.selectNext(); // consome o identificador\n\n            if (lexer.next.tipo != TipoToken.ASSIGN) {\n                throw new RuntimeException(\"[Parser] Expected =\");\n            }\n            lexer.selectNext(); // consome o '='\n\n            Node expressao = parseExpression();\n            Node assignNode = new Assignment(idNode, expressao);\n\n            if (lexer.next.tipo != TipoToken.END) {\n                throw new RuntimeException(\"[Parser] Expected end of line\");\n            }\n            lexer.selectNext(); // consome o '\\n'\n            return assignNode;\n\n        } else if (lexer.next.tipo == TipoToken.END) {\n            // linha vazia: ε seguido de EOL, direto - vira um NoOp\n            lexer.selectNext(); // consome o '\\n' sozinho\n            return new NoOp();\n\n        } else {\n            throw new RuntimeException(\"[Parser] Unexpected token in statement: \" + lexer.next.tipo);\n        }\n    }\n\n    // NOVO ponto de entrada: um programa é uma sequência de Statements,\n    // até bater EOF - cada Statement vira um filho do Block\n    static Node parseProgram() {\n        Node bloco = new Block();\n        while (lexer.next.tipo != TipoToken.EOF) {\n            Node statement = parseStatement();\n            bloco.children.add(statement);\n        }\n        return bloco;\n    }\n\n    static Node run(String code) {\n        lexer = new Lexer(code);\n        lexer.selectNext();\n        Node raiz = parseProgram(); // era parseExpression() antes - agora é o programa inteiro\n\n        if (lexer.next.tipo != TipoToken.EOF) {\n            throw new RuntimeException(\"[Parser] Unexpected token \" + lexer.next.tipo);\n        }\n        return raiz;\n    }\n}","linhas":{"main_read":10,"main_nl":13,"main_prepro":17,"main_parse":21,"main_st":26,"main_eval":27,"prepro":39,"st_get_chk":70,"st_get_err":71,"st_get_ret":73,"st_set_chk":78,"st_set_upd":79,"st_set_new":81,"lex_ws":128,"lex_eof":135,"lex_end":139,"lex_plus":143,"lex_minus":147,"lex_mult":151,"lex_div":155,"lex_open":159,"lex_close":163,"lex_assign":167,"lex_num_loop":172,"lex_num":176,"lex_word_loop":183,"lex_kw_chk":190,"lex_print":191,"lex_iden":193,"lex_err":197,"ev_int":220,"ev_un_child":233,"ev_un_neg":235,"ev_un_pos":237,"ev_bin_l":250,"ev_bin_r":251,"ev_bin_plus":254,"ev_bin_minus":256,"ev_bin_mult":258,"ev_bin_div_chk":260,"ev_bin_div_err":261,"ev_bin_div":263,"ev_iden":279,"ev_print_child":290,"ev_print_out":291,"ev_asg_child":306,"ev_asg_name":310,"ev_asg_set":311,"ev_block_for":321,"ev_block_child":322,"ev_noop":331,"pf_enter":339,"pf_num_chk":340,"pf_num":341,"pf_num_next":342,"pf_plus_chk":345,"pf_plus_next":346,"pf_plus_call":347,"pf_plus_ret":348,"pf_minus_chk":350,"pf_minus_next":351,"pf_minus_call":352,"pf_minus_ret":353,"pf_par_chk":355,"pf_par_next":356,"pf_par_call":357,"pf_par_close_chk":358,"pf_par_err":359,"pf_par_close_next":361,"pf_par_ret":362,"pf_iden_chk":364,"pf_iden":366,"pf_iden_next":367,"pf_err":371,"pt_enter":375,"pt_first":376,"pt_while":377,"pt_op":378,"pt_op_next":379,"pt_right":380,"pt_binop":381,"pt_ret":383,"pe_enter":386,"pe_first":387,"pe_while":388,"pe_op":389,"pe_op_next":390,"pe_right":391,"pe_binop":392,"pe_ret":394,"ps_enter":399,"ps_print_chk":401,"ps_print_next":403,"ps_print_open_chk":404,"ps_print_open_err":405,"ps_print_open_next":407,"ps_print_expr":408,"ps_print_close_chk":409,"ps_print_close_err":410,"ps_print_close_next":412,"ps_print_node":413,"ps_print_end_chk":415,"ps_print_end_err":416,"ps_print_end_next":418,"ps_print_ret":419,"ps_iden_chk":421,"ps_iden_name":423,"ps_iden_node":424,"ps_iden_next":425,"ps_assign_chk":427,"ps_assign_err":428,"ps_assign_next":430,"ps_asg_expr":432,"ps_asg_node":433,"ps_asg_end_chk":435,"ps_asg_end_err":436,"ps_asg_end_next":438,"ps_asg_ret":439,"ps_empty_chk":441,"ps_empty_next":443,"ps_noop":444,"ps_err":447,"pp_enter":453,"pp_block":454,"pp_while":455,"pp_stmt":456,"pp_add":457,"pp_ret":459,"run_enter":462,"run_lexer":463,"run_first":464,"run_prog":465,"run_eof_chk":467,"run_err":468,"run_ret":470}},"v2.1":{"src":"import java.nio.file.Files;\nimport java.nio.file.Paths;\nimport java.util.ArrayList;\nimport java.util.HashMap;\nimport java.util.Scanner;\n\n// ============================================================================\n// REFERÊNCIA DO ROTEIRO 6 (v2.1) usada pelo depurador do site.\n// É o main.java do Roteiro 5 (v2.0) com os acréscimos do Roteiro 6 marcados\n// com \"R6:\". Serve pra estudar - a sua versão é você quem escreve!\n// Os comentários \"//#chave\" no fim das linhas marcam a linha que o\n// depurador destaca; o site remove esses marcadores antes de mostrar.\n// ============================================================================\n\npublic class Main {\n    public static void main(String[] args) throws Exception {\n        String conteudo = new String(Files.readAllBytes(Paths.get(args[0])));\n        conteudo = conteudo + \"\\n\";\n\n        String codigoLimpo = PrePro.filter(conteudo);\n\n        Node raiz = Parser.run(codigoLimpo);\n\n        SymbolTable st = new SymbolTable();\n        raiz.evaluate(st);\n    }\n}\n\n// ===================== Pré-processamento =====================\nclass PrePro {\n    static String filter(String codigo) {\n        return codigo.replaceAll(\"//.*\", \"\");\n    }\n}\n\n// ===================== Tabela de Símbolos =====================\nclass Variable {\n    int value;\n\n    Variable(int value) {\n        this.value = value;\n    }\n}\n\nclass SymbolTable {\n    private HashMap<String, Variable> table = new HashMap<String, Variable>();\n\n    HashMap<String, Variable> getTable() {\n        return table;\n    }\n\n    void setTable(HashMap<String, Variable> table) {\n        this.table = table;\n    }\n\n    int getValue(String nome) {\n        if (!table.containsKey(nome)) {\n            throw new RuntimeException(\"[Semantic] Variable \" + nome + \" not declared\");\n        }\n        return table.get(nome).value;\n    }\n\n    void setValue(String nome, int valor) {\n        if (table.containsKey(nome)) {\n            table.get(nome).value = valor;\n        } else {\n            table.put(nome, new Variable(valor));\n        }\n    }\n}\n\n// ===================== Tokens =====================\n// R6: 12 tipos novos - operadores booleanos (AND, OR, NOT), relacionais\n// (EQ, GT, LT), palavras reservadas (IF, WHILE, ELSE, READ) e chaves\nenum TipoToken {\n    NUMERO, PLUS, MINUS, MULT, DIV, OPEN_PAR, CLOSE_PAR,\n    ASSIGN, END, PRINT, IDEN, EOF,\n    AND, OR, NOT, EQ, GT, LT,\n    IF, WHILE, ELSE, READ,\n    OPEN_BRA, CLOSE_BRA\n}\n\nclass Token {\n    TipoToken tipo;\n    int valor;\n    String nome;\n\n    Token(TipoToken tipo, int valor) {\n        this.tipo = tipo;\n        this.valor = valor;\n    }\n\n    Token(TipoToken tipo, String nome) {\n        this.tipo = tipo;\n        this.nome = nome;\n    }\n}\n\n// ===================== Lexer =====================\nclass Lexer {\n    String source;\n    int position;\n    Token next;\n\n    Lexer(String source) {\n        this.source = source;\n        this.position = 0;\n    }\n\n    void selectNext() {\n        while (position < source.length()\n                && Character.isWhitespace(source.charAt(position))\n                && source.charAt(position) != '\\n') {\n            position++;\n        }\n\n        if (position >= source.length()) {\n            next = new Token(TipoToken.EOF, 0);\n\n        } else if (source.charAt(position) == '\\n') {\n            next = new Token(TipoToken.END, 0);\n            position++;\n\n        } else if (source.charAt(position) == '+') {\n            next = new Token(TipoToken.PLUS, 0);\n            position++;\n\n        } else if (source.charAt(position) == '-') {\n            next = new Token(TipoToken.MINUS, 0);\n            position++;\n\n        } else if (source.charAt(position) == '*') {\n            next = new Token(TipoToken.MULT, 0);\n            position++;\n\n        } else if (source.charAt(position) == '/') {\n            next = new Token(TipoToken.DIV, 0);\n            position++;\n\n        } else if (source.charAt(position) == '(') {\n            next = new Token(TipoToken.OPEN_PAR, 0);\n            position++;\n\n        } else if (source.charAt(position) == ')') {\n            next = new Token(TipoToken.CLOSE_PAR, 0);\n            position++;\n\n        } else if (source.charAt(position) == '=') {\n            // R6: olha UM caractere à frente - \"==\" é comparação,\n            // \"=\" sozinho continua sendo atribuição\n            if (position + 1 < source.length() && source.charAt(position + 1) == '=') {\n                next = new Token(TipoToken.EQ, 0);\n                position += 2;\n            } else {\n                next = new Token(TipoToken.ASSIGN, 0);\n                position++;\n            }\n\n        } else if (source.charAt(position) == '&') {\n            // R6: \"&&\" é UM token - um '&' sozinho não existe na linguagem\n            if (position + 1 < source.length() && source.charAt(position + 1) == '&') {\n                next = new Token(TipoToken.AND, 0);\n                position += 2;\n            } else {\n                throw new RuntimeException(\"[Lexer] Invalid Symbol &\");\n            }\n\n        } else if (source.charAt(position) == '|') {\n            // R6: mesma ideia pro \"||\"\n            if (position + 1 < source.length() && source.charAt(position + 1) == '|') {\n                next = new Token(TipoToken.OR, 0);\n                position += 2;\n            } else {\n                throw new RuntimeException(\"[Lexer] Invalid Symbol |\");\n            }\n\n        } else if (source.charAt(position) == '!') {\n            next = new Token(TipoToken.NOT, 0);\n            position++;\n\n        } else if (source.charAt(position) == '>') {\n            next = new Token(TipoToken.GT, 0);\n            position++;\n\n        } else if (source.charAt(position) == '<') {\n            next = new Token(TipoToken.LT, 0);\n            position++;\n\n        } else if (source.charAt(position) == '{') {\n            next = new Token(TipoToken.OPEN_BRA, 0);\n            position++;\n\n        } else if (source.charAt(position) == '}') {\n            next = new Token(TipoToken.CLOSE_BRA, 0);\n            position++;\n\n        } else if (Character.isDigit(source.charAt(position))) {\n            String acumulado = \"\";\n            while (position < source.length() && Character.isDigit(source.charAt(position))) {\n                acumulado += source.charAt(position);\n                position++;\n            }\n            next = new Token(TipoToken.NUMERO, Integer.parseInt(acumulado));\n\n        } else if (Character.isLetter(source.charAt(position))) {\n            String acumulado = \"\";\n            while (position < source.length()\n                    && (Character.isLetterOrDigit(source.charAt(position)) || source.charAt(position) == '_')) {\n                acumulado += source.charAt(position);\n                position++;\n            }\n            // R6: mais palavras reservadas na mesma \"peneira\" do Println\n            if (acumulado.equals(\"Println\")) {\n                next = new Token(TipoToken.PRINT, 0);\n            } else if (acumulado.equals(\"if\")) {\n                next = new Token(TipoToken.IF, 0);\n            } else if (acumulado.equals(\"for\")) {\n                // em Go, \"for\" faz o papel do while - por isso o token é WHILE\n                next = new Token(TipoToken.WHILE, 0);\n            } else if (acumulado.equals(\"else\")) {\n                next = new Token(TipoToken.ELSE, 0);\n            } else if (acumulado.equals(\"Scanln\")) {\n                next = new Token(TipoToken.READ, 0);\n            } else {\n                next = new Token(TipoToken.IDEN, acumulado);\n            }\n\n        } else {\n            throw new RuntimeException(\"[Lexer] Invalid Symbol \" + source.charAt(position));\n        }\n    }\n}\n\n// ===================== AST =====================\nabstract class Node {\n    Object value;\n    ArrayList<Node> children = new ArrayList<Node>();\n\n    abstract int evaluate(SymbolTable st);\n}\n\nclass IntVal extends Node {\n    IntVal(int valor) {\n        this.value = valor;\n    }\n\n    int evaluate(SymbolTable st) {\n        return (Integer) value;\n    }\n}\n\nclass UnOp extends Node {\n    UnOp(String operador, Node operando) {\n        this.value = operador;\n        this.children.add(operando);\n    }\n\n    int evaluate(SymbolTable st) {\n        int resultado = children.get(0).evaluate(st);\n        if (value.equals(\"-\")) {\n            return -resultado;\n        } else if (value.equals(\"!\")) {\n            // R6: não existe booleano de verdade - 0 é falso, qualquer outro é verdadeiro\n            return (resultado == 0) ? 1 : 0;\n        } else {\n            return resultado;\n        }\n    }\n}\n\nclass BinOp extends Node {\n    BinOp(String operador, Node esquerdo, Node direito) {\n        this.value = operador;\n        this.children.add(esquerdo);\n        this.children.add(direito);\n    }\n\n    int evaluate(SymbolTable st) {\n        int esquerdo = children.get(0).evaluate(st);\n        int direito = children.get(1).evaluate(st);\n\n        if (value.equals(\"+\")) {\n            return esquerdo + direito;\n        } else if (value.equals(\"-\")) {\n            return esquerdo - direito;\n        } else if (value.equals(\"*\")) {\n            return esquerdo * direito;\n        } else if (value.equals(\"/\")) {\n            if (direito == 0) {\n                throw new RuntimeException(\"[Semantic] Division by zero\");\n            }\n            return esquerdo / direito;\n        } else if (value.equals(\"==\")) {\n            // R6: relacionais devolvem 1 (verdadeiro) ou 0 (falso)\n            return (esquerdo == direito) ? 1 : 0;\n        } else if (value.equals(\">\")) {\n            return (esquerdo > direito) ? 1 : 0;\n        } else if (value.equals(\"<\")) {\n            return (esquerdo < direito) ? 1 : 0;\n        } else if (value.equals(\"&&\")) {\n            // R6: repara que os DOIS filhos já foram avaliados lá em cima -\n            // aqui não tem curto-circuito como no && do Java\n            return (esquerdo != 0 && direito != 0) ? 1 : 0;\n        } else if (value.equals(\"||\")) {\n            return (esquerdo != 0 || direito != 0) ? 1 : 0;\n        } else {\n            throw new RuntimeException(\"[Semantic] Invalid operator \" + value);\n        }\n    }\n}\n\nclass Identifier extends Node {\n    Identifier(String nome) {\n        this.value = nome;\n    }\n\n    int evaluate(SymbolTable st) {\n        return st.getValue((String) value);\n    }\n}\n\nclass Print extends Node {\n    Print(Node expressao) {\n        this.children.add(expressao);\n    }\n\n    int evaluate(SymbolTable st) {\n        int resultado = children.get(0).evaluate(st);\n        System.out.println(resultado);\n        return 0;\n    }\n}\n\nclass Assignment extends Node {\n    Assignment(Node identificador, Node expressao) {\n        this.children.add(identificador);\n        this.children.add(expressao);\n    }\n\n    int evaluate(SymbolTable st) {\n        int valor = children.get(1).evaluate(st);\n        String nome = (String) children.get(0).value;\n        st.setValue(nome, valor);\n        return 0;\n    }\n}\n\nclass Block extends Node {\n    int evaluate(SymbolTable st) {\n        for (Node filho : children) {\n            filho.evaluate(st);\n        }\n        return 0;\n    }\n}\n\nclass NoOp extends Node {\n    int evaluate(SymbolTable st) {\n        return 0;\n    }\n}\n\n// R6: If tem 2 filhos (condição, bloco do \"então\") ou 3 (+ bloco do else)\nclass If extends Node {\n    If(Node condicao, Node entao, Node senao) {\n        this.children.add(condicao);\n        this.children.add(entao);\n        if (senao != null) {\n            this.children.add(senao);\n        }\n    }\n\n    int evaluate(SymbolTable st) {\n        if (children.get(0).evaluate(st) != 0) {\n            children.get(1).evaluate(st);\n        } else if (children.size() > 2) {\n            children.get(2).evaluate(st);\n        }\n        return 0;\n    }\n}\n\n// R6: While tem sempre 2 filhos - a condição é REAVALIADA a cada volta\nclass While extends Node {\n    While(Node condicao, Node corpo) {\n        this.children.add(condicao);\n        this.children.add(corpo);\n    }\n\n    int evaluate(SymbolTable st) {\n        while (children.get(0).evaluate(st) != 0) {\n            children.get(1).evaluate(st);\n        }\n        return 0;\n    }\n}\n\n// R6: Read não tem filhos - o valor vem de fora do programa (do terminal)\nclass Read extends Node {\n    // UM Scanner só pro programa inteiro: se cada Scanln criasse o seu,\n    // o primeiro poderia \"engolir\" no buffer linhas que eram do segundo\n    static Scanner scanner = new Scanner(System.in);\n\n    int evaluate(SymbolTable st) {\n        if (!scanner.hasNextLine()) {\n            throw new RuntimeException(\"[Semantic] Scanln: no input available\");\n        }\n        String linha = scanner.nextLine().trim();\n        try {\n            return Integer.parseInt(linha);\n        } catch (NumberFormatException e) {\n            throw new RuntimeException(\"[Semantic] Scanln: invalid integer \" + linha);\n        }\n    }\n}\n\n// ===================== Parser =====================\nclass Parser {\n    static Lexer lexer;\n\n    static Node parseFactor() {\n        if (lexer.next.tipo == TipoToken.NUMERO) {\n            Node node = new IntVal(lexer.next.valor);\n            lexer.selectNext();\n            return node;\n\n        } else if (lexer.next.tipo == TipoToken.PLUS) {\n            lexer.selectNext();\n            Node filho = parseFactor();\n            return new UnOp(\"+\", filho);\n\n        } else if (lexer.next.tipo == TipoToken.MINUS) {\n            lexer.selectNext();\n            Node filho = parseFactor();\n            return new UnOp(\"-\", filho);\n\n        } else if (lexer.next.tipo == TipoToken.NOT) {\n            // R6: \"!\" é unário, igualzinho ao \"-\", só muda o operador\n            lexer.selectNext();\n            Node filho = parseFactor();\n            return new UnOp(\"!\", filho);\n\n        } else if (lexer.next.tipo == TipoToken.OPEN_PAR) {\n            lexer.selectNext();\n            // R6: dentro do parênteses agora cabe uma expressão BOOLEANA inteira\n            Node node = parseBoolExpression();\n            if (lexer.next.tipo != TipoToken.CLOSE_PAR) {\n                throw new RuntimeException(\"[Parser] Expected )\");\n            }\n            lexer.selectNext();\n            return node;\n\n        } else if (lexer.next.tipo == TipoToken.IDEN) {\n            Node node = new Identifier(lexer.next.nome);\n            lexer.selectNext();\n            return node;\n\n        } else if (lexer.next.tipo == TipoToken.READ) {\n            // R6: Scanln ( ) - é um FACTOR porque devolve um valor, dá pra\n            // usar no meio de uma conta: x = Scanln() + 1\n            lexer.selectNext();\n            if (lexer.next.tipo != TipoToken.OPEN_PAR) {\n                throw new RuntimeException(\"[Parser] Expected (\");\n            }\n            lexer.selectNext();\n            if (lexer.next.tipo != TipoToken.CLOSE_PAR) {\n                throw new RuntimeException(\"[Parser] Expected )\");\n            }\n            lexer.selectNext();\n            return new Read();\n\n        } else {\n            throw new RuntimeException(\"[Parser] Unexpected token in factor: \" + lexer.next.tipo);\n        }\n    }\n\n    static Node parseTerm() {\n        Node node = parseFactor();\n        while (lexer.next.tipo == TipoToken.MULT || lexer.next.tipo == TipoToken.DIV) {\n            String operador = (lexer.next.tipo == TipoToken.MULT) ? \"*\" : \"/\";\n            lexer.selectNext();\n            Node direito = parseFactor();\n            node = new BinOp(operador, node, direito);\n        }\n        return node;\n    }\n\n    static Node parseExpression() {\n        Node node = parseTerm();\n        while (lexer.next.tipo == TipoToken.PLUS || lexer.next.tipo == TipoToken.MINUS) {\n            String operador = (lexer.next.tipo == TipoToken.PLUS) ? \"+\" : \"-\";\n            lexer.selectNext();\n            Node direito = parseTerm();\n            node = new BinOp(operador, node, direito);\n        }\n        return node;\n    }\n\n    // R6: mesmo molde do parseExpression, um degrau ACIMA na precedência:\n    // REL_EXPRESSION = EXPRESSION, { (\"==\" | \">\" | \"<\"), EXPRESSION }\n    static Node parseRelExpression() {\n        Node node = parseExpression();\n        while (lexer.next.tipo == TipoToken.EQ || lexer.next.tipo == TipoToken.GT || lexer.next.tipo == TipoToken.LT) {\n            String operador = (lexer.next.tipo == TipoToken.EQ) ? \"==\" : (lexer.next.tipo == TipoToken.GT) ? \">\" : \"<\";\n            lexer.selectNext();\n            Node direito = parseExpression();\n            node = new BinOp(operador, node, direito);\n        }\n        return node;\n    }\n\n    // R6: BOOL_TERM = REL_EXPRESSION, { \"&&\", REL_EXPRESSION }\n    static Node parseBoolTerm() {\n        Node node = parseRelExpression();\n        while (lexer.next.tipo == TipoToken.AND) {\n            lexer.selectNext();\n            Node direito = parseRelExpression();\n            node = new BinOp(\"&&\", node, direito);\n        }\n        return node;\n    }\n\n    // R6: BOOL_EXPRESSION = BOOL_TERM, { \"||\", BOOL_TERM } - o degrau mais\n    // de cima: || é quem tem a MENOR precedência de todas\n    static Node parseBoolExpression() {\n        Node node = parseBoolTerm();\n        while (lexer.next.tipo == TipoToken.OR) {\n            lexer.selectNext();\n            Node direito = parseBoolTerm();\n            node = new BinOp(\"||\", node, direito);\n        }\n        return node;\n    }\n\n    // R6: BLOCK = \"{\", { STATEMENT }, \"}\" - parecido com o parseProgram,\n    // só que o laço para no \"}\" em vez de parar no EOF\n    static Node parseBlock() {\n        if (lexer.next.tipo != TipoToken.OPEN_BRA) {\n            throw new RuntimeException(\"[Parser] Expected {\");\n        }\n        lexer.selectNext();\n        Node bloco = new Block();\n        while (lexer.next.tipo != TipoToken.CLOSE_BRA) {\n            if (lexer.next.tipo == TipoToken.EOF) {\n                throw new RuntimeException(\"[Parser] Expected }\");\n            }\n            Node statement = parseStatement();\n            bloco.children.add(statement);\n        }\n        lexer.selectNext();\n        return bloco;\n    }\n\n    static Node parseStatement() {\n\n        if (lexer.next.tipo == TipoToken.PRINT) {\n            lexer.selectNext();\n            if (lexer.next.tipo != TipoToken.OPEN_PAR) {\n                throw new RuntimeException(\"[Parser] Expected (\");\n            }\n            lexer.selectNext();\n            Node expressao = parseBoolExpression();\n            if (lexer.next.tipo != TipoToken.CLOSE_PAR) {\n                throw new RuntimeException(\"[Parser] Expected )\");\n            }\n            lexer.selectNext();\n            Node printNode = new Print(expressao);\n\n            if (lexer.next.tipo != TipoToken.END) {\n                throw new RuntimeException(\"[Parser] Expected end of line\");\n            }\n            lexer.selectNext();\n            return printNode;\n\n        } else if (lexer.next.tipo == TipoToken.IDEN) {\n            String nome = lexer.next.nome;\n            Node idNode = new Identifier(nome);\n            lexer.selectNext();\n\n            if (lexer.next.tipo != TipoToken.ASSIGN) {\n                throw new RuntimeException(\"[Parser] Expected =\");\n            }\n            lexer.selectNext();\n\n            Node expressao = parseBoolExpression();\n            Node assignNode = new Assignment(idNode, expressao);\n\n            if (lexer.next.tipo != TipoToken.END) {\n                throw new RuntimeException(\"[Parser] Expected end of line\");\n            }\n            lexer.selectNext();\n            return assignNode;\n\n        } else if (lexer.next.tipo == TipoToken.IF) {\n            // R6: IF = \"if\", BOOL_EXPRESSION, BLOCK, [ \"else\", BLOCK ]\n            lexer.selectNext();\n            Node condicao = parseBoolExpression();\n            Node entao = parseBlock();\n            Node senao = null;\n            if (lexer.next.tipo == TipoToken.ELSE) {\n                lexer.selectNext();\n                senao = parseBlock();\n            }\n            Node ifNode = new If(condicao, entao, senao);\n\n            if (lexer.next.tipo != TipoToken.END) {\n                throw new RuntimeException(\"[Parser] Expected end of line\");\n            }\n            lexer.selectNext();\n            return ifNode;\n\n        } else if (lexer.next.tipo == TipoToken.WHILE) {\n            // R6: FOR = \"for\", BOOL_EXPRESSION, BLOCK - o \"while\" do Go\n            lexer.selectNext();\n            Node condicao = parseBoolExpression();\n            Node corpo = parseBlock();\n            Node whileNode = new While(condicao, corpo);\n\n            if (lexer.next.tipo != TipoToken.END) {\n                throw new RuntimeException(\"[Parser] Expected end of line\");\n            }\n            lexer.selectNext();\n            return whileNode;\n\n        } else if (lexer.next.tipo == TipoToken.END) {\n            lexer.selectNext();\n            return new NoOp();\n\n        } else {\n            throw new RuntimeException(\"[Parser] Unexpected token in statement: \" + lexer.next.tipo);\n        }\n    }\n\n    static Node parseProgram() {\n        Node bloco = new Block();\n        while (lexer.next.tipo != TipoToken.EOF) {\n            Node statement = parseStatement();\n            bloco.children.add(statement);\n        }\n        return bloco;\n    }\n\n    static Node run(String code) {\n        lexer = new Lexer(code);\n        lexer.selectNext();\n        Node raiz = parseProgram();\n\n        if (lexer.next.tipo != TipoToken.EOF) {\n            throw new RuntimeException(\"[Parser] Unexpected token \" + lexer.next.tipo);\n        }\n        return raiz;\n    }\n}\n","linhas":{"main_read":17,"main_nl":18,"main_prepro":20,"main_parse":22,"main_st":24,"main_eval":25,"prepro":32,"st_get_chk":57,"st_get_err":58,"st_get_ret":60,"st_set_chk":64,"st_set_upd":65,"st_set_new":67,"lex_ws":111,"lex_eof":118,"lex_end":121,"lex_plus":125,"lex_minus":129,"lex_mult":133,"lex_div":137,"lex_open":141,"lex_close":145,"lex_eq_chk":151,"lex_eq":152,"lex_assign":155,"lex_and_chk":161,"lex_and":162,"lex_and_err":165,"lex_or_chk":170,"lex_or":171,"lex_or_err":174,"lex_not":178,"lex_gt":182,"lex_lt":186,"lex_obra":190,"lex_cbra":194,"lex_num_loop":199,"lex_num":203,"lex_word_loop":207,"lex_kw_chk":213,"lex_print":214,"lex_if":216,"lex_while":219,"lex_else":221,"lex_read":223,"lex_iden":225,"lex_err":229,"ev_int":248,"ev_un_child":259,"ev_un_neg":261,"ev_un_not":264,"ev_un_pos":266,"ev_bin_l":279,"ev_bin_r":280,"ev_bin_plus":283,"ev_bin_minus":285,"ev_bin_mult":287,"ev_bin_div_chk":289,"ev_bin_div_err":290,"ev_bin_div":292,"ev_bin_eq":295,"ev_bin_gt":297,"ev_bin_lt":299,"ev_bin_and":303,"ev_bin_or":305,"ev_iden":318,"ev_print_child":328,"ev_print_out":329,"ev_asg_child":341,"ev_asg_name":342,"ev_asg_set":343,"ev_block_for":350,"ev_block_child":351,"ev_noop":359,"ev_if_cond":374,"ev_if_then":375,"ev_if_has_else":376,"ev_if_else":377,"ev_if_end":379,"ev_while_cond":391,"ev_while_body":392,"ev_while_end":394,"ev_read_chk":405,"ev_read_eof":406,"ev_read_line":408,"ev_read_ret":410,"ev_read_err":412,"pf_enter":421,"pf_num_chk":422,"pf_num":423,"pf_num_next":424,"pf_plus_chk":427,"pf_plus_next":428,"pf_plus_call":429,"pf_plus_ret":430,"pf_minus_chk":432,"pf_minus_next":433,"pf_minus_call":434,"pf_minus_ret":435,"pf_not_chk":437,"pf_not_next":439,"pf_not_call":440,"pf_not_ret":441,"pf_par_chk":443,"pf_par_next":444,"pf_par_call":446,"pf_par_close_chk":447,"pf_par_err":448,"pf_par_close_next":450,"pf_par_ret":451,"pf_iden_chk":453,"pf_iden":454,"pf_iden_next":455,"pf_read_chk":458,"pf_read_next":461,"pf_read_open_chk":462,"pf_read_open_err":463,"pf_read_open_next":465,"pf_read_close_chk":466,"pf_read_close_err":467,"pf_read_close_next":469,"pf_read_ret":470,"pf_err":473,"pt_enter":477,"pt_first":478,"pt_while":479,"pt_op":480,"pt_op_next":481,"pt_right":482,"pt_binop":483,"pt_ret":485,"pe_enter":488,"pe_first":489,"pe_while":490,"pe_op":491,"pe_op_next":492,"pe_right":493,"pe_binop":494,"pe_ret":496,"pr_enter":501,"pr_first":502,"pr_while":503,"pr_op":504,"pr_op_next":505,"pr_right":506,"pr_binop":507,"pr_ret":509,"pbt_enter":513,"pbt_first":514,"pbt_while":515,"pbt_op_next":516,"pbt_right":517,"pbt_binop":518,"pbt_ret":520,"pbe_enter":525,"pbe_first":526,"pbe_while":527,"pbe_op_next":528,"pbe_right":529,"pbe_binop":530,"pbe_ret":532,"pb_enter":537,"pb_open_chk":538,"pb_open_err":539,"pb_open_next":541,"pb_block":542,"pb_while":543,"pb_eof_chk":544,"pb_eof_err":545,"pb_stmt":547,"pb_add":548,"pb_close_next":550,"pb_ret":551,"ps_enter":554,"ps_print_chk":556,"ps_print_next":557,"ps_print_open_chk":558,"ps_print_open_err":559,"ps_print_open_next":561,"ps_print_expr":562,"ps_print_close_chk":563,"ps_print_close_err":564,"ps_print_close_next":566,"ps_print_node":567,"ps_print_end_chk":569,"ps_print_end_err":570,"ps_print_end_next":572,"ps_print_ret":573,"ps_iden_chk":575,"ps_iden_name":576,"ps_iden_node":577,"ps_iden_next":578,"ps_assign_chk":580,"ps_assign_err":581,"ps_assign_next":583,"ps_asg_expr":585,"ps_asg_node":586,"ps_asg_end_chk":588,"ps_asg_end_err":589,"ps_asg_end_next":591,"ps_asg_ret":592,"ps_if_chk":594,"ps_if_next":596,"ps_if_cond":597,"ps_if_then":598,"ps_else_chk":600,"ps_else_next":601,"ps_else_block":602,"ps_if_node":604,"ps_if_end_chk":606,"ps_if_end_err":607,"ps_if_end_next":609,"ps_if_ret":610,"ps_while_chk":612,"ps_while_next":614,"ps_while_cond":615,"ps_while_body":616,"ps_while_node":617,"ps_while_end_chk":619,"ps_while_end_err":620,"ps_while_end_next":622,"ps_while_ret":623,"ps_empty_chk":625,"ps_empty_next":626,"ps_noop":627,"ps_err":630,"pp_enter":634,"pp_block":635,"pp_while":636,"pp_stmt":637,"pp_add":638,"pp_ret":640,"run_enter":643,"run_lexer":644,"run_first":645,"run_prog":646,"run_eof_chk":648,"run_err":649,"run_ret":651}}};</script>
 <script>
 /* =========================================================================
-   ROTEIRO 6 — depurador animado (Java)
-   Usa o Motor (r6/motor.js, validado contra o javac) e a referência Java
-   do Roteiro 6 (window.R6_FONTE). Visual no mesmo estilo da animação
-   da Colinha: fita de tokens, pilha de chamadas, AST e código ativo.
+   DEPURADOR ANIMADO (Java) — Roteiros 5 e 6
+   <div data-java-dep="v2.0"> ou "v2.1". Usa o Motor (adrielle/motor.js,
+   validado contra o javac) e os fontes Java em window.JAVA_FONTES. Visual
+   no estilo da animação da Colinha: fita de tokens, pilha de chamadas,
+   AST e código ativo.
    ========================================================================= */
 (function () {
   "use strict";
-  var F = window.R6_FONTE, SRC = F.src.split("\n"), LN = F.linhas;
 
   function h(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
@@ -8832,9 +8964,11 @@ var DG = (function () {
     });
   }
 
-  // ---------------------------------------------- métodos do arquivo Java
-  var METODOS = (function () {
-    var M = [];
+  // ------------------------------- fonte Java de cada versão + seus métodos
+  var CACHE = {};
+  function fonteJava(v) {
+    if (CACHE[v]) return CACHE[v];
+    var f = window.JAVA_FONTES[v], SRC = f.src.split("\n"), M = [];
     SRC.forEach(function (l, i) {
       var m = /^\s+(?:public\s+|static\s+|abstract\s+|private\s+)*[\w<>\[\],]+\s+(\w+)\s*\([^)]*\)\s*(?:throws\s+\w+\s*)?\{/.exec(l);
       if (!m || /^(if|while|for|switch|catch)$/.test(m[1])) return;
@@ -8845,12 +8979,14 @@ var DG = (function () {
         if (prof <= 0) { M.push({ de: i + 1, ate: j + 1 }); break; }
       }
     });
-    return M;
-  })();
-  function metodoDe(l) {
-    var best = null;
-    METODOS.forEach(function (m) { if (l >= m.de && l <= m.ate && (!best || m.ate - m.de < best.ate - best.de)) best = m; });
-    return best;
+    return (CACHE[v] = {
+      SRC: SRC, LN: f.linhas,
+      metodoDe: function (l) {
+        var best = null;
+        M.forEach(function (m) { if (l >= m.de && l <= m.ate && (!best || m.ate - m.de < best.ate - best.de)) best = m; });
+        return best;
+      }
+    });
   }
 
   // ------------------------------------------------------------ rótulos
@@ -8882,7 +9018,19 @@ var DG = (function () {
   var KIND = function (fn) { return /^Lexer/.test(fn) ? "lex" : /^Parser/.test(fn) ? "syn" : /evaluate|SymbolTable|Scanner/.test(fn) ? "sem" : "main"; };
   var RET_EVAL = /^(ev_int|ev_un_neg|ev_un_not|ev_un_pos|ev_bin_(plus|minus|mult|div|eq|gt|lt|and|or)|ev_read_ret|st_get_ret)$/;
 
-  var EXEMPLOS = [
+  var EXEMPLOS = {};
+  EXEMPLOS["v2.0"] = [
+    ["meta do roteiro", "// Comentário!\nx1 = 3\ny2 = 4\nz_final = x1 + y2\nPrintln(z_final)", ""],
+    ["reatribuição", "x = 2\nx = x * x + 1\n\nPrintln(x)\nPrintln(-x / 2)", ""],
+    ["linha vazia e comentário", "a = 7 // fim de linha\n\n// linha só de comentário\nPrintln(a * (a - 1))", ""],
+    ["erro: variável", "x = 1\nPrintln(x + y)", ""],
+    ["erro: 1x", "1x = 3", ""],
+    ["erro: _x", "_x = 3", ""],
+    ["erro: println", "println(3)", ""],
+    ["erro: parêntese", "x = 3\nPrintln(x", ""],
+    ["divisão por zero", "a = 4\nb = a - 4\nPrintln(a / b)", ""]
+  ];
+  EXEMPLOS["v2.1"] = [
     ["fatorial (meta)", "i = 1\nn = 5\nf = 1\nif n < 2 {\n    f = 1\n} else {\n    for i < n || i == n {\n        f = f * i\n        i = i + 1\n    }\n}\nPrintln(f)", ""],
     ["Scanln + if/else", "x = Scanln()\ny = Scanln()\nif x > y && !(x == 0) {\n    Println(x)\n} else {\n    Println(y)\n}", "7\n3\n"],
     ["for com && e !", "n = Scanln()\ni = 0\nfor i < n && !(i == 3) {\n    Println(i)\n    i = i + 1\n}", "10\n"],
@@ -8898,8 +9046,9 @@ var DG = (function () {
   var SELO = { main: "Preparação", prepro: "PrePro", lexer: "Léxico", parser: "Sintático", eval: "Semântico", erro: "Erro", fim: "Fim" };
   var COR = { lexer: "#14674c", parser: "#215c7a", eval: "#bd711d", erro: "#a13216", main: "#819096", prepro: "#819096", fim: "#14674c" };
 
-  function montar(host) {
-    var uid = "r6d" + Math.random().toString(36).slice(2, 7);
+  function montar(host, versao) {
+    var X = fonteJava(versao), SRC = X.SRC, LN = X.LN, metodoDe = X.metodoDe, EXS = EXEMPLOS[versao];
+    var uid = "jd" + Math.random().toString(36).slice(2, 7);
     host.classList.add("r6");
     host.innerHTML =
       '<div class="r6-ent">' +
@@ -8947,7 +9096,12 @@ var DG = (function () {
     };
     var S = { res: null, i: 0, timer: null, inteiro: false, mostra: "" };
 
-    EXEMPLOS.forEach(function (ex, k) {
+    if (versao !== "v2.1") {  // antes do Roteiro 6 não existe Scanln
+      host.querySelector(".r6-in").hidden = true;
+      host.querySelector(".r6-campo-in .lb").hidden = true;
+      host.querySelector(".r6-stdin").hidden = true;
+    }
+    EXS.forEach(function (ex, k) {
       var b = document.createElement("button");
       b.type = "button"; b.className = "preset"; b.textContent = ex[0];
       b.setAttribute("aria-pressed", k === 0 ? "true" : "false");
@@ -8961,7 +9115,7 @@ var DG = (function () {
     function compila() {
       parar();
       var src = E.src.value;
-      S.res = Motor.executar("v2.1", src, { stdin: E.inp.value, max: 20000 });
+      S.res = Motor.executar(versao, src, { stdin: E.inp.value, max: 20000 });
       S.mostra = src + "\n";
       S.stdin = E.inp.value;
       E.sl.max = String(S.res.trace.steps.length - 1);
@@ -9221,22 +9375,550 @@ var DG = (function () {
       E.tx.className = "tx r6-tx" + (s.erro ? " erro" : "");
     }
 
-    E.src.value = EXEMPLOS[0][1];
-    E.inp.value = EXEMPLOS[0][2];
+    E.src.value = EXS[0][1];
+    E.inp.value = EXS[0][2];
     compila();
     return { carregar: function (src, stdin) { E.src.value = src; E.inp.value = stdin || ""; compila(); host.scrollIntoView({ behavior: "smooth", block: "start" }); tocar(); } };
   }
 
-  var inst = [];
-  Array.prototype.forEach.call(document.querySelectorAll("[data-r6]"), function (el) { inst.push(montar(el)); });
+  // um depurador por versão; [data-java-abrir][data-versao] carrega um programa nele
+  var inst = {};
+  Array.prototype.forEach.call(document.querySelectorAll("[data-java-dep]"), function (el) {
+    var v = el.getAttribute("data-java-dep");
+    inst[v] = montar(el, v);
+  });
   document.addEventListener("click", function (e) {
-    var b = e.target.closest("[data-r6-abrir]");
-    if (!b || !inst[0]) return;
-    inst[0].carregar(b.getAttribute("data-r6-abrir").replace(/\\n/g, "\n"), (b.getAttribute("data-stdin") || "").replace(/\\n/g, "\n"));
+    var b = e.target.closest("[data-java-abrir]");
+    if (!b) return;
+    var alvo = inst[b.getAttribute("data-versao") || "v2.1"];
+    if (alvo) alvo.carregar(b.getAttribute("data-java-abrir").replace(/\\n/g, "\n"), (b.getAttribute("data-stdin") || "").replace(/\\n/g, "\n"));
   });
 })();
 
 </script>
-<!-- /R6:js -->
+<script>
+/* =========================================================================
+   PERGUNTAS DE CADA ROTEIRO
+   Para um roteiro novo, acrescente PERGUNTAS.r7 = { ... } no mesmo formato
+   e ponha <div data-perguntas="r7"></div> na seção dele.
+
+   Formato do texto (dentro de String.raw`...`):
+     «código»                  código na linha
+     ~~~ ... ~~~               bloco de código (em linhas próprias)
+     **negrito**               destaque
+     - item                    lista
+     linha em branco           novo parágrafo
+     @@v2.0|programa@@         botão que abre o programa no depurador
+     @@v2.1|programa##stdin@@  idem, com entrada do terminal
+   (use \n dentro de @@...@@ para quebrar linha no programa)
+   ========================================================================= */
+var PERGUNTAS = window.PERGUNTAS = window.PERGUNTAS || {};
+
+/* ============================================================ ROTEIRO 5 */
+PERGUNTAS.r5 = {
+  titulo: "Roteiro 5 · v2.0",
+  grupos: [
+    { id: "rot", nome: "Sobre o roteiro", itens: [
+      { p: String.raw`O que mudou na forma de o compilador receber o código-fonte, e por quê?`,
+        r: String.raw`Até o Roteiro 4, «args[0]» ERA o programa («java Main "1+2"»). Agora «args[0]» é o **nome de um arquivo**, e a main() lê o conteúdo com «Files.readAllBytes(Paths.get(args[0]))».
+
+O motivo: a linguagem passou a ter várias linhas (um statement por linha). Um programa com quebras de linha não cabe direito num argumento de terminal.` },
+      { p: String.raw`Por que a main() faz «conteudo = conteudo + "\n"» logo depois de ler o arquivo?`,
+        d: "Pense no que o parseStatement() exige no fim de cada linha.",
+        r: String.raw`Todo statement precisa terminar em END (o token do «\n»). Se o arquivo não terminar com quebra de linha, o último statement veria **EOF** no lugar de END e daria «[Parser] Expected end of line».
+
+Com o «\n» extra, a última linha sempre fecha certinho. Se o arquivo já terminava com «\n», sobra uma linha vazia no fim, que vira um NoOp inofensivo.
+
+@@v2.0|x = 2\nPrintln(x * x)@@` },
+      { p: String.raw`Em que etapa os comentários desaparecem? Por que não é o Lexer que cuida deles?`,
+        r: String.raw`No **pré-processamento**: «PrePro.filter()» roda na main(), antes de o Lexer ser criado. O Lexer nunca vê um comentário, e por isso a EBNF nem precisa falar deles.
+
+As perguntas do slide:
+- «// //» é um comentário só: tudo a partir do primeiro «//» some.
+- O comentário fecha no fim da linha, e o «\n» fica.
+- Não entra na EBNF, porque não existe mais quando a análise começa.
+
+@@v2.0|a = 7 // fim de linha\n// linha inteira\nPrintln(a) // // dois de uma vez@@` },
+      { p: String.raw`Por que a SymbolTable é criada na main(), DEPOIS do «Parser.run()», e não dentro do Parser?`,
+        r: String.raw`Porque o Parser só **monta** a árvore, sem executar nada. Os valores das variáveis só existem na **execução** (no «evaluate()»). O slide diz: "a SymbolTable NÃO existe durante a ação do Parser".
+
+Consequência prática: «Println(y)» com y inexistente passa pelo Parser sem problema e só estoura depois, como «[Semantic] Variable y not declared». No depurador, o painel da SymbolTable diz "ainda não existe" durante toda a fase 1.
+
+@@v2.0|x = 1\nPrintln(x + y)@@` },
+      { p: String.raw`Classifique cada erro como [Lexer], [Parser] ou [Semantic]: «_x = 3» · «1x = 3» · «x = 3 +» · «println(3)» · «Println(y)» · «x = 1 / 0»`,
+        d: "Lexer: caractere que não começa token. Parser: tokens válidos em ordem errada. Semantic: só dá para saber executando.",
+        r: String.raw`- «_x = 3» → «[Lexer] Invalid Symbol _». Nenhum token começa com '_'.
+- «1x = 3» → «[Parser] Unexpected token in statement: NUMERO». O Lexer gera NUMERO(1) e IDEN(x), os dois válidos, mas nenhuma linha começa com número.
+- «x = 3 +» → «[Parser] Unexpected token in factor: END». Faltou o operando da direita.
+- «println(3)» → «[Parser] Expected =». Com p minúsculo, "println" é um IDEN, e IDEN no começo da linha só pode ser atribuição.
+- «Println(y)» → «[Semantic] Variable y not declared».
+- «x = 1 / 0» → «[Semantic] Division by zero».
+
+@@v2.0|1x = 3@@ @@v2.0|println(3)@@` },
+      { p: String.raw`Por que «Print.evaluate()» e «Assignment.evaluate()» devolvem 0?`,
+        r: String.raw`Porque são **statements**, não expressões: eles fazem algo (imprimir, guardar), mas não produzem valor. O 0 é só um "dummy" para cumprir a assinatura «abstract int evaluate(SymbolTable st)», que é a mesma para todo nó (polimorfismo). Ninguém usa esse 0.
+
+Compare com o funcional (Aula 10): lá não existe statement, e até o «let» é uma expressão.` },
+      { p: String.raw`Para que existe a classe «Variable», se ela só guarda um «int»?`,
+        r: String.raw`Ela é um **envelope**. Hoje guarda só «value», mas no futuro pode ganhar tipo, "somente leitura" (const) etc. sem mudar a SymbolTable, que continua sendo «HashMap<String, Variable>». O extra credit do roteiro (variáveis imutáveis) usa exatamente isso: veja "Implemente você".` }
+    ]},
+    { id: "fun", nome: "Sobre as funções", itens: [
+      { p: String.raw`«Lexer.selectNext()»: o laço que pula brancos tem a condição extra «source.charAt(position) != '\n'». O que aconteceria sem ela?`,
+        r: String.raw`«Character.isWhitespace('\n')» é true, então a quebra de linha seria pulada como se fosse espaço e **nunca viraria o token END**. Em «x = 1» seguido de «Println(x)», o parseStatement leria «x = 1» e esperaria END, mas encontraria PRINT: «[Parser] Expected end of line».
+
+~~~
+while (position < source.length()
+        && Character.isWhitespace(source.charAt(position))
+        && source.charAt(position) != '\n') {   // <- o '\n' vira token
+    position++;
+}
+~~~` },
+      { p: String.raw`Como o Lexer decide se uma palavra é «PRINT» ou «IDEN»?`,
+        r: String.raw`Ele acumula letras, dígitos e «_» como se fosse um identificador qualquer e só **depois** compara com a palavra reservada: «if (acumulado.equals("Println"))». A comparação diferencia maiúsculas de minúsculas, então «println» vira IDEN. É a técnica pedida no roteiro, e ela escala bem: no Roteiro 6 é só acrescentar «else if» para if/for/else/Scanln.` },
+      { p: String.raw`«parseStatement()»: como ele escolhe o caminho, e o que devolve para uma linha vazia?`,
+        r: String.raw`Olha **só o token atual** (LL(1)):
+- PRINT → «Println ( EXPRESSION )», vira um nó Print
+- IDEN → «IDEN = EXPRESSION», vira um Assignment
+- END → linha vazia, vira um **NoOp**
+- qualquer outro → «[Parser] Unexpected token in statement: …»
+
+Os dois primeiros caminhos terminam conferindo END e consumindo o «\n». Na linha vazia, o próprio END é consumido.` },
+      { p: String.raw`No caminho da atribuição, por que «String nome = lexer.next.nome;» vem ANTES de «lexer.selectNext()»?`,
+        r: String.raw`Porque «selectNext()» **sobrescreve** «lexer.next». Depois de avançar, o token atual passa a ser o «=», e o nome da variável se perde. Guarde o que você precisa do token antes de consumir: o Roteiro 3 já fazia isso com o operador («String operador = …» antes do «selectNext()»).` },
+      { p: String.raw`«parseProgram()»: quando o laço para, e quem vira filho do Block?`,
+        r: String.raw`Para quando «lexer.next.tipo == EOF». **Todo** statement vira filho, inclusive os NoOp das linhas vazias. Um arquivo com 5 linhas (contando o «\n» extra da main) dá um Block com uns 5 ou 6 filhos. No depurador você vê os NoOp na árvore.` },
+      { p: String.raw`Depois de «parseProgram()», o «run()» ainda confere «if (lexer.next.tipo != EOF)». Essa checagem pode disparar?`,
+        r: String.raw`**Não.** O «parseProgram()» só devolve quando o token atual já é EOF, então a condição é sempre falsa. É uma sobra do Roteiro 4, quando o run() chamava «parseExpression()», que podia parar no meio (em «1 1», por exemplo). Deixar é inofensivo (é programação defensiva), mas vale saber explicar na prova.` },
+      { p: String.raw`«Assignment.evaluate()»: por que ele avalia só o filho [1] e pega o nome direto do «value» do filho [0]?`,
+        r: String.raw`O filho [0] é um Identifier usado como **alvo**, não como valor. Chamar «evaluate()» nele faria «st.getValue(nome)»:
+- na primeira atribuição, estouraria «[Semantic] Variable x not declared», porque a variável ainda não existe;
+- nas seguintes, buscaria o valor **antigo**, que não interessa.
+
+Então: avalia o lado direito, lê o nome com «(String) children.get(0).value» e chama «st.setValue(nome, valor)».` },
+      { p: String.raw`«SymbolTable.setValue» cria ou atualiza? E o que o «getValue» faz se a variável não existe?`,
+        r: String.raw`**Os dois.** Se o nome já está na tabela, atualiza o «value» do Variable que já existe. Senão, faz «put(nome, new Variable(valor))». O «getValue» lança «[Semantic] Variable nome not declared». É o único erro que a SymbolTable lança, e o roteiro exige o prefixo [Semantic].
+
+@@v2.0|x = 1\nx = x + 1\nPrintln(x)@@` },
+      { p: String.raw`«PrePro.filter» usa «replaceAll("//.*", "")». Por que o «\n» do fim da linha sobrevive?`,
+        r: String.raw`Porque, em regex Java, o «.» **não casa com quebra de linha**. O «//.*» vai até o último caractere antes do «\n» e para. Se a regex fosse «//.*\n», a linha seguinte grudaria na do comentário e o Parser daria «Expected end of line».` }
+    ]},
+    { id: "imp", nome: "Implemente você", extra: true, itens: [
+      { p: String.raw`**Novo símbolo:** o operador de resto «%», com a mesma precedência de «*» e «/». O que muda em cada parte?`,
+        d: "Mesma precedência de * e / quer dizer: mesmo degrau da escada.",
+        r: String.raw`**EBNF**: só o TERM muda.
+~~~
+TERM = FACTOR, { ("*" | "/" | "%"), FACTOR } ;
+~~~
+**Lexer**: um tipo novo no enum (MOD) e um ramo novo:
+~~~
+} else if (source.charAt(position) == '%') {
+    next = new Token(TipoToken.MOD, 0);
+    position++;
+~~~
+**Parser**: só o «parseTerm()», na condição do while e na escolha do operador. parseExpression e parseFactor **não mudam**, porque a precedência vem do degrau:
+~~~
+while (tipo == MULT || tipo == DIV || tipo == MOD) {
+    String operador = tipo == MULT ? "*" : tipo == DIV ? "/" : "%";
+~~~
+**AST**: nenhuma classe nova. É um BinOp("%"):
+~~~
+} else if (value.equals("%")) {
+    if (direito == 0) throw new RuntimeException("[Semantic] Division by zero");
+    return esquerdo % direito;
+~~~
+**Testes**: «Println(7 % 3)» → 1 · «Println(1 + 7 % 3 * 2)» → 3 · «Println(-7 % 3)» → -1 (em Java, o sinal do resto é o do dividendo).` },
+      { p: String.raw`**Variável imutável:** «const x = 1». Depois disso, «x = 2» tem que dar erro. O que muda, e que tipo de erro é?`,
+        d: "O Parser consegue saber, olhando só a linha «x = 2», que x é constante?",
+        r: String.raw`**EBNF**: um caminho novo no STATEMENT.
+~~~
+STATEMENT  = ( λ | ASSIGNMENT | CONST_DECL | PRINT ), "\n" ;
+CONST_DECL = "const", IDENTIFIER, "=", EXPRESSION ;
+~~~
+**Lexer**: «const» é palavra reservada, na mesma peneira do Println:
+~~~
+} else if (acumulado.equals("const")) {
+    next = new Token(TipoToken.CONST, 0);
+~~~
+**Parser**: um ramo novo no parseStatement, igual ao da atribuição com um token a mais na frente:
+~~~
+} else if (lexer.next.tipo == TipoToken.CONST) {
+    lexer.selectNext();                                   // consome "const"
+    if (lexer.next.tipo != TipoToken.IDEN)
+        throw new RuntimeException("[Parser] Expected identifier after const");
+    String nome = lexer.next.nome;
+    lexer.selectNext();
+    if (lexer.next.tipo != TipoToken.ASSIGN)
+        throw new RuntimeException("[Parser] Expected =");
+    lexer.selectNext();
+    Node node = new ConstDecl(new Identifier(nome), parseExpression());
+    // ... confere END como nos outros caminhos
+~~~
+**Variable** ganha um campo, e é por isso que ela era um envelope:
+~~~
+class Variable {
+    int value;
+    boolean constante;
+    Variable(int value, boolean constante) { ... }
+}
+~~~
+**SymbolTable**:
+~~~
+void declareConst(String nome, int valor) {
+    if (table.containsKey(nome))
+        throw new RuntimeException("[Semantic] Variable " + nome + " already declared");
+    table.put(nome, new Variable(valor, true));
+}
+void setValue(String nome, int valor) {
+    if (table.containsKey(nome)) {
+        if (table.get(nome).constante)
+            throw new RuntimeException("[Semantic] Cannot assign to constant " + nome);
+        table.get(nome).value = valor;
+    } else {
+        table.put(nome, new Variable(valor, false));
+    }
+}
+~~~
+**Por que é [Semantic]**: a linha «x = 2» sozinha está sintaticamente perfeita. Só dá para recusar sabendo que, **numa linha anterior**, x virou const. Essa é uma restrição sensível ao contexto (Aula 11), e a gramática livre de contexto do Parser não consegue expressá-la.
+
+**Testes**: «const x = 1» + «Println(x)» → 1 · «const x = 1» + «x = 2» → [Semantic] · «const x = 1» + «const x = 2» → [Semantic] already declared.` },
+      { p: String.raw`**Constante de pré-processamento:** «define N = 10», que substitui N pelo valor antes do Lexer. O que muda na EBNF?`,
+        d: "Leia de novo o enunciado do extra credit: \"o símbolo deixa de existir antes da etapa léxica\".",
+        r: String.raw`**EBNF: nada.** Nem Lexer, nem Parser, nem AST. Tudo acontece no **PrePro**, e a gramática nunca vê o N.
+
+**PrePro**, depois de remover os comentários:
+- encontra as linhas «define NOME = valor» (regex com MULTILINE: «^\s*define\s+([A-Za-z]\w*)\s*=\s*(.*)$»);
+- guarda NOME → valor num mapa e troca a linha por "", **mantendo o «\n»**;
+- no resto do texto, troca «\bNOME\b» por «(valor)».
+
+Os **parênteses** importam: com «define N = 1 + 1», «N * 2» vira «(1 + 1) * 2» = 4. Sem eles, viraria «1 + 1 * 2» = 3. É o bug clássico das macros de C.
+
+Consequência: «N = 1» vira «10 = 1», que dá «[Parser] Unexpected token in statement: NUMERO», exatamente o "Parser Error" do enunciado.` },
+      { p: String.raw`**Comentário de bloco:** «/* ... */», que pode ocupar várias linhas. Onde implementar, e que cuidado tomar?`,
+        r: String.raw`No **PrePro**, antes do «//»:
+~~~
+Matcher m = Pattern.compile("/\\*.*?\\*/", Pattern.DOTALL).matcher(codigo);
+StringBuilder sb = new StringBuilder();
+while (m.find()) {
+    // troca o comentário SÓ pelas quebras de linha que ele tinha
+    String quebras = m.group().replaceAll("[^\n]", "");
+    m.appendReplacement(sb, quebras);
+}
+m.appendTail(sb);
+~~~
+Cuidados:
+- «DOTALL» faz o «.» atravessar linhas, e o «*?» (preguiçoso) para no **primeiro** «*/».
+- Manter os «\n» evita juntar duas linhas numa só (senão «x = 1 /* … */ y = 2» em linhas diferentes viraria um erro).
+- Um «/*» sem fechamento sobra no código, e o Lexer o lê como DIV + MULT, dois tokens válidos! O erro sairia do **Parser** e seria confuso. Melhor lançar um erro próprio no PrePro.` },
+      { p: String.raw`**Println com vários argumentos:** «Println(x, y, x + y)» imprime «1 2 3». Mudanças?`,
+        r: String.raw`**EBNF**:
+~~~
+PRINT = "Println", "(", EXPRESSION, { ",", EXPRESSION }, ")" ;
+~~~
+**Lexer**: token COMMA para «,».
+
+**Parser**, no caminho do PRINT: depois da primeira expressão, um while (as chaves da EBNF viram while):
+~~~
+Node printNode = new Print();
+printNode.children.add(parseExpression());
+while (lexer.next.tipo == TipoToken.COMMA) {
+    lexer.selectNext();
+    printNode.children.add(parseExpression());
+}
+~~~
+**AST**: o Print passa a ter **n** filhos. O evaluate avalia todos e imprime separados por espaço, como o «fmt.Println» do Go.` },
+      { p: String.raw`**Atribuição composta:** «x += 2». Dá para fazer sem nenhuma classe nova de nó?`,
+        d: "Açúcar sintático: o Parser monta com peças que já existem.",
+        r: String.raw`**Dá.** «x += e» é só um jeito curto de escrever «x = x + e».
+
+**EBNF**:
+~~~
+ASSIGNMENT = IDENTIFIER, ( "=" | "+=" ), EXPRESSION ;
+~~~
+**Lexer**: no ramo do «+», olha um caractere à frente (como o «==» do Roteiro 6): se vier «=», é PLUS_ASSIGN e avança 2.
+
+**Parser**: no caminho do IDEN, aceita ASSIGN ou PLUS_ASSIGN. Para PLUS_ASSIGN, monta:
+~~~
+Node dir = parseExpression();
+Node assign = new Assignment(new Identifier(nome),
+        new BinOp("+", new Identifier(nome), dir));
+~~~
+De brinde, «y += 1» sem y declarado já dá «[Semantic] Variable y not declared», porque o Identifier do lado direito faz getValue. Repare que «x + = 1», com espaço, vira PLUS e depois ASSIGN, e dá erro de Parser.` },
+      { p: String.raw`**Declaração obrigatória:** «var x = 1» antes de usar, e erro ao redeclarar ou atribuir sem declarar.`,
+        r: String.raw`**EBNF**:
+~~~
+STATEMENT = ( λ | DECLARATION | ASSIGNMENT | PRINT ), "\n" ;
+DECLARATION = "var", IDENTIFIER, [ "=", EXPRESSION ] ;
+~~~
+Os colchetes viram um «if»: o valor inicial é opcional, e sem ele vale 0 (como no Go).
+
+**Lexer**: palavra reservada VAR. **AST**: um nó novo, «VarDec(id, expr?)», com 1 ou 2 filhos.
+
+**SymbolTable**: separe as duas operações:
+- «declare(nome, v)»: erro «[Semantic] Variable x already declared» se já existe;
+- «setValue(nome, v)»: agora dá erro «[Semantic] Variable x not declared» se **não** existe, em vez de criar.
+
+É o primeiro passo para tipos: no Go, «var x int».` }
+    ]}
+  ]
+};
+
+/* ============================================================ ROTEIRO 6 */
+PERGUNTAS.r6 = {
+  titulo: "Roteiro 6 · v2.1",
+  grupos: [
+    { id: "rot", nome: "Sobre o roteiro", itens: [
+      { p: String.raw`Por que a palavra «for» gera o token «WHILE»?`,
+        r: String.raw`Porque em Go **não existe while**: o «for cond { }» faz esse papel. O enunciado nomeia o token pelo significado (WHILE) e não pela grafia. O nó da AST também é «While», com 2 filhos: condição e corpo.` },
+      { p: String.raw`A linguagem não tem tipo booleano. Como ficam verdadeiro e falso?`,
+        r: String.raw`Tudo é int. Relacionais e lógicos **devolvem 1 ou 0**, e If e While testam «!= 0»: qualquer valor diferente de 0 conta como verdadeiro.
+
+@@v2.1|Println(3 > 2)\nif 5 {\n    Println(7)\n}@@` },
+      { p: String.raw`Por que «} else {» precisa estar na mesma linha? O que acontece com «}» numa linha e «else {» na de baixo?`,
+        r: String.raw`O «\n» depois do «}» é o END que **fecha o statement do if**. A linha de baixo começa com ELSE, e nenhum statement começa com ELSE: «[Parser] Unexpected token in statement: ELSE». O Go tem a mesma regra.
+
+@@v2.1|if 1 {\n    Println(1)\n}\nelse {\n    Println(2)\n}@@` },
+      { p: String.raw`Qual a ordem de precedência, e onde ela "mora" no código?`,
+        r: String.raw`Da mais forte para a mais fraca: unários «! + -» → «* /» → «+ -» → «== > <» → «&&» → «||».
+
+Ela mora na **escada de funções**: parseBoolExpression (||) chama parseBoolTerm (&&), que chama parseRelExpression, que chama parseExpression, parseTerm e parseFactor. Quanto mais fundo, mais cedo o nó é montado e mais forte o operador.
+
+@@v2.1|Println(1 + 2 * 3 == 7 && !0 || 0)@@` },
+      { p: String.raw`Por que «Scanln()» fica no FACTOR, e o «Println» no STATEMENT?`,
+        r: String.raw`**Scanln devolve um valor**, então pode aparecer no meio de uma conta: «x = Scanln() + 1». Por isso fica no degrau mais fundo, junto com números e variáveis. **Println não devolve nada**, é uma ação, então é statement.` },
+      { p: String.raw`O que acontece com «i = 0» e «for i < 3 { Println(i) }»?`,
+        r: String.raw`Laço infinito: ninguém muda o i, então a condição nunca chega a 0. O Java imprime 0 para sempre. O depurador para em 20 000 passos e avisa.
+
+@@v2.1|i = 0\nfor i < 3 {\n    Println(i)\n}@@` }
+    ]},
+    { id: "fun", nome: "Sobre as funções", itens: [
+      { p: String.raw`No Lexer, por que testar «position + 1 < source.length()» antes de olhar o caractere seguinte ao «=»?`,
+        r: String.raw`Para não ler fora da String. Se o «=» for o último caractere, «charAt(position + 1)» lançaria «StringIndexOutOfBoundsException», uma exceção sem prefixo e que não explica nada. Com o «\n» que a main acrescenta isso não acontece na prática, mas o Lexer não deve depender disso.` },
+      { p: String.raw`«parseBlock()» confere «EOF» dentro do laço. Se não conferisse, o que aconteceria em «if 1 {» sem fechar?`,
+        r: String.raw`O laço chamaria «parseStatement()» com EOF, que lançaria «[Parser] Unexpected token in statement: EOF». Continua sendo erro, mas a mensagem não diz o problema. Conferindo antes, a mensagem vira «[Parser] Expected }», que aponta exatamente o que faltou.
+
+@@v2.1|if 1 {\nPrintln(1)@@` },
+      { p: String.raw`«parseRelExpression» usa while, então aceita «3 > 2 > 1». Quanto isso vale?`,
+        d: "Associativo à esquerda: (3 > 2) > 1.",
+        r: String.raw`**0!** Primeiro «3 > 2» dá 1, depois «1 > 1» dá 0. O resultado surpreende quem lê como matemática. Em Go isso nem compila, porque «bool > int» é erro de tipo. É um bom argumento para a tipagem forte (exercício adicional do roteiro).
+
+@@v2.1|Println(3 > 2 > 1)@@` },
+      { p: String.raw`Num laço que dá 3 voltas, quantas vezes «While.evaluate()» avalia a condição?`,
+        r: String.raw`**4.** Três vezes dá diferente de 0 e o corpo roda; na quarta dá 0 e o laço termina. No depurador, a pilha mostra «volta» e «condicao» a cada iteração.` },
+      { p: String.raw`Por que o «Scanner» do nó «Read» é «static»?`,
+        r: String.raw`Para existir **um só** Scanner no programa inteiro. O Scanner lê o stdin em blocos (buffer). Se cada Scanln criasse o seu, o primeiro poderia puxar para o buffer dele linhas que eram do segundo, e o segundo não encontraria nada.` },
+      { p: String.raw`O BinOp avalia os dois filhos antes de olhar o operador. Qual a consequência para «&&» e «||»? Como fazer curto-circuito?`,
+        r: String.raw`**Não há curto-circuito**: «1 > 0 || 1 / 0 == 0» dá «[Semantic] Division by zero», mesmo com o lado esquerdo já verdadeiro. Para ter curto-circuito, trate && e || **antes** de avaliar o filho direito:
+~~~
+int esquerdo = children.get(0).evaluate(st);
+if (value.equals("&&") && esquerdo == 0) return 0;
+if (value.equals("||") && esquerdo != 0) return 1;
+int direito = children.get(1).evaluate(st);
+~~~
+@@v2.1|if 1 > 0 || 1 / 0 == 0 {\n    Println(1)\n}@@` },
+      { p: String.raw`O «else» é opcional. Como isso aparece na EBNF e no código?`,
+        r: String.raw`Na EBNF são os colchetes: «IF = "if", BOOL_EXPRESSION, BLOCK, [ "else", BLOCK ]». No código, **colchete vira if**: «if (lexer.next.tipo == TipoToken.ELSE) { … }». O nó If fica com 2 ou 3 filhos, e o evaluate confere «children.size() > 2».` }
+    ]},
+    { id: "imp", nome: "Implemente você", extra: true, itens: [
+      { p: String.raw`**Novos símbolos:** «!=», «>=» e «<=». Dá para fazer sem mexer no BinOp?`,
+        d: "a >= b é o mesmo que !(a < b).",
+        r: String.raw`**Lexer**: lookahead de 1, como no «==». «!» seguido de «=» vira NE; senão, NOT. «<» e «>» seguidos de «=» viram LE e GE.
+
+**EBNF**: só o REL_EXPRESSION.
+~~~
+REL_EXPRESSION = EXPRESSION, { ("==" | "!=" | ">" | "<" | ">=" | "<="), EXPRESSION } ;
+~~~
+**Sem mexer no BinOp** (açúcar no parseRelExpression):
+~~~
+if (op == NE) node = new UnOp("!", new BinOp("==", node, dir));
+if (op == GE) node = new UnOp("!", new BinOp("<", node, dir));
+if (op == LE) node = new UnOp("!", new BinOp(">", node, dir));
+~~~
+O jeito direto também vale: três ramos novos no BinOp.evaluate. O slide da Aula 12 aponta exatamente esse caminho: "os demais relacionais podem ser obtidos via operações booleanas".` },
+      { p: String.raw`**else if:** «} else if c {» sem abrir outro bloco. O que muda?`,
+        r: String.raw`**EBNF**:
+~~~
+IF = "if", BOOL_EXPRESSION, BLOCK, [ "else", ( BLOCK | IF ) ] ;
+~~~
+**Parser**: separe o if numa função «parseIf()» que **não** consome o END. Assim o else pode chamá-la de novo, e o END é consumido uma vez só, no fim:
+~~~
+static Node parseIf() {
+    lexer.selectNext();                        // consome "if"
+    Node cond = parseBoolExpression();
+    Node entao = parseBlock(), senao = null;
+    if (lexer.next.tipo == TipoToken.ELSE) {
+        lexer.selectNext();
+        senao = (lexer.next.tipo == TipoToken.IF) ? parseIf() : parseBlock();
+    }
+    return new If(cond, entao, senao);
+}
+~~~
+**AST**: nada novo. O else-if é um If pendurado como 3º filho de outro If.` },
+      { p: String.raw`**for estilo C:** «for i = 0; i < n; i = i + 1 { ... }». Que problema de LL(1) aparece?`,
+        d: "Os dois tipos de for podem começar com o mesmo token.",
+        r: String.raw`**EBNF**:
+~~~
+FOR = "for", ( BOOL_EXPRESSION | ASSIGNMENT, ";", BOOL_EXPRESSION, ";", ASSIGNMENT ), BLOCK ;
+~~~
+**O problema**: «for i < n» e «for i = 0» começam os dois com IDEN. Olhando só 1 token não dá para escolher o caminho. Saída: ler o IDEN, guardar o nome e olhar o **próximo**. Se for ASSIGN, é o for do C; senão, monta o Identifier e continua a expressão. Isso é, na prática, um lookahead de 2.
+
+**AST**: nenhum nó novo, porque é açúcar sintático:
+~~~
+Block[ Assignment(init),
+       While(cond, Block[ ...corpo..., Assignment(passo) ]) ]
+~~~
+**Lexer**: token SEMICOLON.` },
+      { p: String.raw`**if como expressão** (extra credit): «n = if x > 2 { 5 } else { 3 }». Onde encaixar, e por que é a maior precedência?`,
+        r: String.raw`No **FACTOR**, porque é algo que devolve valor, como um número:
+~~~
+FACTOR = ... | "if", BOOL_EXPRESSION, "{", BOOL_EXPRESSION, "}",
+               "else", "{", BOOL_EXPRESSION, "}" ;
+~~~
+Fica no degrau mais fundo, e por isso tem a maior precedência. Aqui o else é **obrigatório**, porque a expressão tem que valer alguma coisa.
+
+**AST**: um nó «Ternary» com 3 filhos; «evaluate()» devolve o valor do filho 1 ou do 2. Não há ambiguidade com o if-statement: o parseStatement só vê «if» no começo da linha, e o parseFactor só é chamado depois de um «=», de um «(» etc.` },
+      { p: String.raw`**break:** sair do for no meio. Como o While fica sabendo?`,
+        r: String.raw`**Lexer**: BREAK (palavra reservada). **EBNF**: «STATEMENT = ( … | "break" ), "\n"». **AST**: um nó Break cujo evaluate **lança um sinal** que o While captura:
+~~~
+class BreakSinal extends RuntimeException {}
+// Break.evaluate:  throw new BreakSinal();
+// While.evaluate:
+while (children.get(0).evaluate(st) != 0) {
+    try { children.get(1).evaluate(st); }
+    catch (BreakSinal b) { break; }
+}
+~~~
+O break fora de um laço sobe até a main e precisa virar um erro com prefixo. Dá para pegar no Parser com um contador de profundidade de laços, que é mais cedo e com mensagem melhor.` },
+      { p: String.raw`**repeat … until** (exercício adicional): o corpo roda pelo menos uma vez.`,
+        r: String.raw`**EBNF**: «REPEAT = "repeat", BLOCK, "until", BOOL_EXPRESSION ;»
+**Lexer**: REPEAT e UNTIL. **AST**: «RepeatUntil(corpo, cond)»:
+~~~
+int evaluate(SymbolTable st) {
+    do {
+        children.get(0).evaluate(st);
+    } while (children.get(1).evaluate(st) == 0);   // até a condição ser verdadeira
+    return 0;
+}
+~~~
+Repare que é o **contrário** do while: repete enquanto a condição for falsa.` },
+      { p: String.raw`**Tipagem forte** (exercício adicional): o que muda para «if 5 { }» e «3 > 2 > 1» virarem erro?`,
+        r: String.raw`- **Variable** ganha «tipo» (é o envelope, de novo).
+- O **evaluate()** deixa de devolver int puro e passa a devolver um par (valor, tipo), por exemplo uma classe «Valor».
+- **BinOp** confere os tipos: aritméticos pedem int e int e dão int; relacionais pedem int e dão bool; && e || pedem bool.
+- **If/While** exigem bool na condição: «if 5» vira «[Semantic] Condition must be bool».
+- Declaração com tipo: «var x int», e a atribuição confere se os tipos batem.
+
+Isso é análise semântica de verdade. Dá para fazer numa passada separada pela árvore (type checking) antes de executar.` }
+    ]}
+  ]
+};
+
+</script>
+<script>
+/* =========================================================================
+   PERGUNTAS — interface. <div data-perguntas="r5"></div> mostra
+   window.PERGUNTAS.r5 em cartões: pergunta, dica, resposta sob demanda e
+   marcação "sei / revisar" (guardada neste navegador).
+   ========================================================================= */
+(function () {
+  "use strict";
+  function h(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+
+  // texto simples -> HTML (formato descrito em perguntas.js)
+  function inline(t) {
+    return h(t)
+      .replace(/«([^»]*)»/g, '<code class="inl">$1</code>')
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/@@(v[\d.]+)\|([\s\S]*?)(?:##([\s\S]*?))?@@/g, function (m, v, prog, stdin) {
+        return '<button type="button" class="preset pg-dep" data-versao="' + v + '" data-java-abrir="' + prog + '"' + (stdin ? ' data-stdin="' + stdin + '"' : "") + ">▶ testar no depurador</button>";
+      });
+  }
+  function md(t) {
+    var out = [], partes = t.split(/^~~~\s*$/m);
+    partes.forEach(function (p, i) {
+      if (i % 2 === 1) { out.push('<div class="code pg-code"><pre>' + h(p.replace(/^\n|\n$/g, "")) + "</pre></div>"); return; }
+      p.split(/\n{2,}/).forEach(function (bloco) {
+        bloco = bloco.replace(/^\n+|\n+$/g, "");
+        if (!bloco) return;
+        var ls = bloco.split("\n");
+        if (ls.every(function (l) { return /^- /.test(l); })) out.push("<ul>" + ls.map(function (l) { return "<li>" + inline(l.slice(2)) + "</li>"; }).join("") + "</ul>");
+        else if (/^- /.test(ls[ls.length - 1]) && !/^- /.test(ls[0])) {
+          var k = ls.findIndex(function (l) { return /^- /.test(l); });
+          out.push("<p>" + inline(ls.slice(0, k).join(" ")) + "</p><ul>" + ls.slice(k).map(function (l) { return "<li>" + inline(l.replace(/^- /, "")) + "</li>"; }).join("") + "</ul>");
+        } else out.push("<p>" + inline(ls.join(" ")) + "</p>");
+      });
+    });
+    return out.join("");
+  }
+
+  function montar(el, chave) {
+    var D = window.PERGUNTAS && window.PERGUNTAS[chave];
+    if (!D) { el.textContent = "Sem perguntas para " + chave; return; }
+    var CH = "adrielle-perguntas-" + chave, marcas = {};
+    try { marcas = JSON.parse(localStorage.getItem(CH) || "{}"); } catch (e) { marcas = {}; }
+    function salva() { try { localStorage.setItem(CH, JSON.stringify(marcas)); } catch (e) {} }
+    var todos = [];
+    D.grupos.forEach(function (g) { g.itens.forEach(function (it, k) { todos.push({ g: g, it: it, id: g.id + "-" + k }); }); });
+    var filtro = "todas";
+
+    el.classList.add("pg");
+    el.innerHTML =
+      '<div class="pg-topo"><div class="pg-prog"><div class="pg-barra"><span class="pg-sei"></span><span class="pg-rev"></span></div><span class="pg-conta"></span></div>' +
+      '<div class="pg-filtros" role="group" aria-label="Filtrar perguntas">' +
+        '<button type="button" class="preset" data-f="todas" aria-pressed="true">todas · ' + todos.length + "</button>" +
+        D.grupos.map(function (g) { return '<button type="button" class="preset" data-f="' + g.id + '" aria-pressed="false">' + h(g.nome) + " · " + g.itens.length + "</button>"; }).join("") +
+        '<button type="button" class="preset" data-f="revisar" aria-pressed="false">↺ para revisar</button>' +
+        '<button type="button" class="preset" data-f="novas" aria-pressed="false">ainda não marquei</button>' +
+      "</div></div>" +
+      '<div class="pg-lista">' + todos.map(function (q, n) {
+        return '<article class="pg-card' + (q.g.extra ? " pg-extra" : "") + '" data-id="' + q.id + '" data-g="' + q.g.id + '">' +
+          '<header><span class="pg-num">' + (n + 1) + '</span><span class="pg-tag">' + h(q.g.nome) + (q.g.extra ? " · extra credit" : "") + "</span></header>" +
+          '<div class="pg-p">' + md(q.it.p) + "</div>" +
+          (q.it.d ? '<details class="pg-dica"><summary>dica</summary><p>' + inline(q.it.d) + "</p></details>" : "") +
+          '<div class="pg-acoes"><button type="button" class="btn pg-ver" aria-expanded="false">Mostrar resposta</button>' +
+            '<button type="button" class="btn sei pg-m" data-m="sei">✓ sei</button><button type="button" class="btn revisar pg-m" data-m="rev">↺ revisar</button></div>' +
+          '<div class="pg-r" hidden>' + md(q.it.r) + "</div></article>";
+      }).join("") + "</div>";
+
+    function pinta() {
+      var sei = 0, rev = 0;
+      todos.forEach(function (q) {
+        var card = el.querySelector('[data-id="' + q.id + '"]'), m = marcas[q.id];
+        if (m === "sei") sei++; if (m === "rev") rev++;
+        card.classList.toggle("marcou-sei", m === "sei");
+        card.classList.toggle("marcou-rev", m === "rev");
+        card.hidden = !(filtro === "todas" || filtro === q.g.id || (filtro === "revisar" && m === "rev") || (filtro === "novas" && !m));
+      });
+      el.querySelector(".pg-sei").style.width = (sei / todos.length * 100) + "%";
+      el.querySelector(".pg-rev").style.width = (rev / todos.length * 100) + "%";
+      el.querySelector(".pg-conta").textContent = sei + " sei · " + rev + " para revisar · " + (todos.length - sei - rev) + " sem marcar";
+    }
+    el.addEventListener("click", function (e) {
+      var b = e.target.closest("button");
+      if (!b || !el.contains(b)) return;
+      if (b.hasAttribute("data-f")) {
+        filtro = b.getAttribute("data-f");
+        Array.prototype.forEach.call(el.querySelectorAll("[data-f]"), function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+        return pinta();
+      }
+      var card = b.closest(".pg-card");
+      if (b.classList.contains("pg-ver")) {
+        var r = card.querySelector(".pg-r"), abre = r.hidden;
+        r.hidden = !abre;
+        b.textContent = abre ? "Esconder resposta" : "Mostrar resposta";
+        b.setAttribute("aria-expanded", abre);
+      } else if (b.hasAttribute("data-m")) {
+        var id = card.getAttribute("data-id"), m = b.getAttribute("data-m");
+        if (marcas[id] === m) delete marcas[id]; else marcas[id] = m;
+        salva(); pinta();
+      }
+    });
+    pinta();
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll("[data-perguntas]"), function (el) { montar(el, el.getAttribute("data-perguntas")); });
+})();
+
+</script>
+<!-- /ADR:js -->
 </body>
 </html>

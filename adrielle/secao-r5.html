@@ -1,0 +1,88 @@
+    <!-- ---------------- R5 ---------------- -->
+    <section id="r5" class="painel">
+      <div class="rot-head">
+        <span class="ver">v2.0</span>
+        <span class="meta">
+          <span class="eyebrow">Roteiro 5 · variáveis, blocos, Println e comentários · em Java</span>
+          <h3 style="font-size:clamp(1.4rem,2.8vw,1.85rem);font-weight:600">De calculadora a interpretador</h3>
+          <span class="mudancas"><span class="mud novo">PrePro</span><span class="mud novo">SymbolTable · Variable</span><span class="mud novo">Identifier · Print · Assignment · Block · NoOp</span><span class="mud novo">ASSIGN END PRINT IDEN</span><span class="mud estr">parseProgram · parseStatement</span><span class="mud nome">evaluate(st)</span><span class="mud nome">entrada por arquivo</span></span>
+        </span>
+      </div>
+
+      <p class="prose">O Roteiro 5 é o maior salto do curso: o compilador deixa de avaliar <em>uma</em> expressão e passa a executar um <strong>programa</strong>, uma instrução por linha, com variáveis que guardam valores entre uma linha e outra. A meta do roteiro:</p>
+      <div class="code syn"><pre><span class="c">// Comentário!</span>
+x1 = 3
+y2 = 4
+z_final = x1 + y2
+Println(z_final)</pre></div>
+
+      <p class="prose" style="background:#fff8e8;border:1px solid #efd9a9;border-radius:8px;padding:10px 13px"><strong>Esta aba é em Java, com o seu código de verdade:</strong> o painel "Código" mostra o <code class="inl">main.java</code> da tag <code class="inl">v2.0.2</code>, sem nenhuma alteração. O depurador reimplementa cada método e foi conferido contra o <code class="inl">javac</code>: mesmas saídas e mesmas mensagens de erro.</p>
+
+      <div class="tab-wrap">
+        <table class="tab matriz r6-matriz">
+          <thead><tr><th>peça</th><th>v1.2 (Roteiro 4)</th><th>v2.0 (Roteiro 5)</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">main()</td><td>args[0] é a expressão</td><td class="nasce">args[0] é o arquivo · + "\n" · PrePro · cria a SymbolTable</td></tr>
+            <tr><td class="mono">PrePro</td><td class="ausente">—</td><td class="nasce">nasce · filter() tira os // comentários</td></tr>
+            <tr><td class="mono">Lexer</td><td>+ - * / ( ) INT</td><td class="nasce">+ ASSIGN, END ('\n' vira token!), PRINT, IDEN</td></tr>
+            <tr><td class="mono">SymbolTable · Variable</td><td class="ausente">—</td><td class="nasce">nascem · getValue lança [Semantic]</td></tr>
+            <tr><td class="mono">Node.evaluate</td><td>evaluate()</td><td class="nasce">evaluate(SymbolTable st), em TODOS os nós</td></tr>
+            <tr><td class="mono">Identifier · Print · Assignment · Block · NoOp</td><td class="ausente">—</td><td class="nasce">nascem</td></tr>
+            <tr><td class="mono">Parser</td><td>run → expression</td><td class="nasce">run → program → statement → expression</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>A gramática</h4>
+      <div class="code syn"><pre>PROGRAM    = { STATEMENT } ;
+STATEMENT  = ( λ | IDENTIFIER, <span class="s">"="</span>, EXPRESSION | <span class="s">"Println"</span>, <span class="s">"("</span>, EXPRESSION, <span class="s">")"</span> ), <span class="s">"\n"</span> ;
+EXPRESSION = TERM, { (<span class="s">"+"</span> | <span class="s">"-"</span>), TERM } ;
+TERM       = FACTOR, { (<span class="s">"*"</span> | <span class="s">"/"</span>), FACTOR } ;
+FACTOR     = NUMBER | IDENTIFIER | (<span class="s">"+"</span> | <span class="s">"-"</span>), FACTOR | <span class="s">"("</span>, EXPRESSION, <span class="s">")"</span> ;
+IDENTIFIER = LETTER, { LETTER | DIGIT | <span class="s">"_"</span> } ;
+NUMBER     = DIGIT, { DIGIT } ;</pre></div>
+
+      <div class="antes-depois">
+        <div class="ad-col antes">
+          <span class="rot">v1.2 — a main imprime o valor da expressão</span>
+          <div class="code"><pre>Node raiz = Parser.run(codigoFonte);
+<span class="k">int</span> resultado = raiz.evaluate();
+System.out.println(resultado);</pre></div>
+        </div>
+        <div class="ad-col depois">
+          <span class="rot">v2.0 — quem imprime é o nó Print</span>
+          <div class="code"><pre>String codigoLimpo = PrePro.filter(conteudo);
+Node raiz = Parser.run(codigoLimpo);
+SymbolTable st = <span class="k">new</span> SymbolTable();
+raiz.evaluate(st);  <span class="c">// sem println aqui</span></pre></div>
+        </div>
+      </div>
+
+      <h4>Depurador animado — Roteiro 5</h4>
+      <p class="prose">Veja o <code class="inl">\n</code> virar o token <strong>END</strong> na fita, o <code class="inl">parseStatement()</code> escolher o caminho pelo primeiro token e o Block raiz ganhar um filho por linha (inclusive os NoOp das linhas vazias). Na fase 2, a <strong>SymbolTable</strong> nasce vazia e vai sendo preenchida: a linha pisca em laranja quando é escrita e fica azul quando é lida.</p>
+      <div data-java-dep="v2.0"></div>
+
+      <h4>Base de testes</h4>
+      <p class="prose">O roteiro pede um programa com bloco de instruções, atribuições com operações entre variáveis e impressão, além dos testes de variável inválida e de variável inexistente.</p>
+      <div class="tab-wrap">
+        <table class="tab">
+          <thead><tr><th>programa</th><th>saída</th><th>o que mostra</th></tr></thead>
+          <tbody>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.0" data-java-abrir="// Comentário!\nx1 = 3\ny2 = 4\nz_final = x1 + y2\nPrintln(z_final)">meta do roteiro</button></td><td class="sai">7</td><td class="pq">comentário, 3 atribuições, Println</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.0" data-java-abrir="x = 1\nx = x + 1\nPrintln(x * (4 + 1))\n\nPrintln(-x)">x = x + 1</button></td><td class="sai">10 · -2</td><td class="pq">setValue atualiza; linha vazia vira NoOp</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.0" data-java-abrir="1x = 3">1x = 3</button></td><td class="sai erro">[Parser] Unexpected token in statement: NUMERO</td><td class="pq">variável inválida: tokens válidos, ordem errada</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.0" data-java-abrir="_x = 3">_x = 3</button></td><td class="sai erro">[Lexer] Invalid Symbol _</td><td class="pq">variável inválida: '_' não começa token</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.0" data-java-abrir="Println(y)">Println(y)</button></td><td class="sai erro">[Semantic] Variable y not declared</td><td class="pq">variável inexistente: só a execução descobre</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.0" data-java-abrir="println(3)">println(3)</button></td><td class="sai erro">[Parser] Expected =</td><td class="pq">p minúsculo vira IDEN, e IDEN no começo da linha é atribuição</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.0" data-java-abrir="Println(3) 4">Println(3) 4</button></td><td class="sai erro">[Parser] Expected end of line</td><td class="pq">um statement por linha</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.0" data-java-abrir="x = 99999999999">x = 99999999999</button></td><td class="sai erro">NumberFormatException</td><td class="pq">Integer.parseInt estoura, sem prefixo</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Perguntas do Roteiro 5 · treino e extra credit</h4>
+      <p class="prose">Três tipos de pergunta: <strong>sobre o roteiro</strong> (conceitos), <strong>sobre as funções</strong> (o porquê de cada linha do seu código) e <strong>implemente você</strong>, no formato de extra credit e de prova: um símbolo novo, uma variável imutável… o que muda no Lexer, no Parser, na AST e na EBNF. Tente responder antes de abrir a resposta e marque <strong>✓ sei</strong> ou <strong>↺ revisar</strong>. As marcações ficam salvas neste navegador.</p>
+      <div data-perguntas="r5"></div>
+
+      <a class="proxima" href="#r6"><span><span class="lbl">Próxima seção</span><span class="tt">Roteiro 6 · booleanos, if, for e Scanln</span></span><span aria-hidden="true">→</span></a>
+    </section>

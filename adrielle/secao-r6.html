@@ -81,7 +81,7 @@ FACTOR          = NUMBER | IDENTIFIER | (<span class="s">"+"</span> | <span clas
 
       <h4>Depurador animado — Roteiro 6</h4>
       <p class="prose">Escreva um programa (ou escolha um exemplo) e aperte <strong>▶ Rodar</strong>. Na <strong>fita</strong>, cada token entra quando o Parser chama <code class="inl">selectNext()</code>; os consumidos ficam riscados e o <code class="inl">next</code> fica em destaque. A <strong>pilha</strong> mostra quem chamou quem: a moldura vermelha está rodando, a verde está devolvendo um valor. Na <strong>AST</strong>, os nós surgem enquanto o Parser os cria e, na fase 2, acendem conforme o <code class="inl">evaluate()</code> desce e mostram o valor (↩) quando sobem. O <strong>código</strong> é o método Java que está rodando, com a linha acesa. A faixa colorida embaixo da linha do tempo mostra as fases: verde é o Léxico, azul o Sintático, laranja o Semântico.</p>
-      <div data-r6></div>
+      <div data-java-dep="v2.1"></div>
 
       <h4>Base de testes</h4>
       <p class="prose">O roteiro pede um programa com laços e condicionais usando and/or/not e leitura do terminal. Clique numa entrada para carregá-la no depurador. As saídas abaixo foram conferidas rodando a referência Java de verdade.</p>
@@ -89,16 +89,16 @@ FACTOR          = NUMBER | IDENTIFIER | (<span class="s">"+"</span> | <span clas
         <table class="tab">
           <thead><tr><th>programa</th><th>stdin</th><th>saída</th><th>o que mostra</th></tr></thead>
           <tbody>
-            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="n = Scanln()\ni = 0\nfor i &lt; n &amp;&amp; !(i == 3) {\n    Println(i)\n    i = i + 1\n}" data-stdin="10\n">for i &lt; n &amp;&amp; !(i == 3)</button></td><td class="mono">10</td><td class="sai">0 1 2</td><td class="pq">laço com and + not; para no 3 mesmo com n = 10</td></tr>
-            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="x = Scanln()\ny = Scanln()\nif x &gt; y &amp;&amp; !(x == 0) {\n    Println(x)\n} else {\n    Println(y)\n}" data-stdin="7\n3\n">if x &gt; y &amp;&amp; !(x == 0)</button></td><td class="mono">7, 3</td><td class="sai">7</td><td class="pq">condicional com and + not + Scanln</td></tr>
-            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="i = 0\nfor i &lt; 3 {\n    j = 0\n    for j &lt; 2 {\n        Println(i * 10 + j)\n        j = j + 1\n    }\n    i = i + 1\n}">for dentro de for</button></td><td class="mono">—</td><td class="sai">0 1 10 11 20 21</td><td class="pq">Block dentro de Block: a pilha de evaluate() fica funda</td></tr>
-            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="Println(!1 == 0)">Println(!1 == 0)</button></td><td class="mono">—</td><td class="sai">1</td><td class="pq">! é unário, mais forte que ==: (!1) == 0</td></tr>
-            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="if 1 {\n    Println(1)\n}\nelse {\n    Println(2)\n}">else na linha de baixo</button></td><td class="mono">—</td><td class="sai erro">[Parser] Unexpected token in statement: ELSE</td><td class="pq">o "\n" depois do } já fechou o if</td></tr>
-            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="if 1 {\nPrintln(1)">bloco sem fechar</button></td><td class="mono">—</td><td class="sai erro">[Parser] Expected }</td><td class="pq">parseBlock encontrou EOF</td></tr>
-            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="x = 1 &amp; 2">x = 1 &amp; 2</button></td><td class="mono">—</td><td class="sai erro">[Lexer] Invalid Symbol &amp;</td><td class="pq">só existe &amp;&amp;</td></tr>
-            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="x = 2 &gt;= 1">x = 2 &gt;= 1</button></td><td class="mono">—</td><td class="sai erro">[Parser] Unexpected token in factor: ASSIGN</td><td class="pq">&gt;= não existe: vira GT e depois ASSIGN</td></tr>
-            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="x = Scanln()" data-stdin="abc\n">Scanln com texto</button></td><td class="mono">abc</td><td class="sai erro">[Semantic] Scanln: invalid integer abc</td><td class="pq">só na execução se sabe o que o usuário digitou</td></tr>
-            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="if 1 &gt; 0 || 1 / 0 == 0 {\n    Println(1)\n}">sem curto-circuito</button></td><td class="mono">—</td><td class="sai erro">[Semantic] Division by zero</td><td class="pq">o BinOp avalia os DOIS filhos antes de olhar o ||</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.1" data-java-abrir="n = Scanln()\ni = 0\nfor i &lt; n &amp;&amp; !(i == 3) {\n    Println(i)\n    i = i + 1\n}" data-stdin="10\n">for i &lt; n &amp;&amp; !(i == 3)</button></td><td class="mono">10</td><td class="sai">0 1 2</td><td class="pq">laço com and + not; para no 3 mesmo com n = 10</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.1" data-java-abrir="x = Scanln()\ny = Scanln()\nif x &gt; y &amp;&amp; !(x == 0) {\n    Println(x)\n} else {\n    Println(y)\n}" data-stdin="7\n3\n">if x &gt; y &amp;&amp; !(x == 0)</button></td><td class="mono">7, 3</td><td class="sai">7</td><td class="pq">condicional com and + not + Scanln</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.1" data-java-abrir="i = 0\nfor i &lt; 3 {\n    j = 0\n    for j &lt; 2 {\n        Println(i * 10 + j)\n        j = j + 1\n    }\n    i = i + 1\n}">for dentro de for</button></td><td class="mono">—</td><td class="sai">0 1 10 11 20 21</td><td class="pq">Block dentro de Block: a pilha de evaluate() fica funda</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.1" data-java-abrir="Println(!1 == 0)">Println(!1 == 0)</button></td><td class="mono">—</td><td class="sai">1</td><td class="pq">! é unário, mais forte que ==: (!1) == 0</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.1" data-java-abrir="if 1 {\n    Println(1)\n}\nelse {\n    Println(2)\n}">else na linha de baixo</button></td><td class="mono">—</td><td class="sai erro">[Parser] Unexpected token in statement: ELSE</td><td class="pq">o "\n" depois do } já fechou o if</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.1" data-java-abrir="if 1 {\nPrintln(1)">bloco sem fechar</button></td><td class="mono">—</td><td class="sai erro">[Parser] Expected }</td><td class="pq">parseBlock encontrou EOF</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.1" data-java-abrir="x = 1 &amp; 2">x = 1 &amp; 2</button></td><td class="mono">—</td><td class="sai erro">[Lexer] Invalid Symbol &amp;</td><td class="pq">só existe &amp;&amp;</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.1" data-java-abrir="x = 2 &gt;= 1">x = 2 &gt;= 1</button></td><td class="mono">—</td><td class="sai erro">[Parser] Unexpected token in factor: ASSIGN</td><td class="pq">&gt;= não existe: vira GT e depois ASSIGN</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.1" data-java-abrir="x = Scanln()" data-stdin="abc\n">Scanln com texto</button></td><td class="mono">abc</td><td class="sai erro">[Semantic] Scanln: invalid integer abc</td><td class="pq">só na execução se sabe o que o usuário digitou</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-versao="v2.1" data-java-abrir="if 1 &gt; 0 || 1 / 0 == 0 {\n    Println(1)\n}">sem curto-circuito</button></td><td class="mono">—</td><td class="sai erro">[Semantic] Division by zero</td><td class="pq">o BinOp avalia os DOIS filhos antes de olhar o ||</td></tr>
           </tbody>
         </table>
       </div>
@@ -112,6 +112,10 @@ FACTOR          = NUMBER | IDENTIFIER | (<span class="s">"+"</span> | <span clas
         <div class="ficha" style="padding:14px 16px"><strong>While reavalia a condição</strong><p style="margin:6px 0 0;font-size:14.5px;color:var(--ink-2)">Um laço de 3 voltas avalia a condição 4 vezes. No depurador, veja <code class="inl">volta</code> subir na pilha.</p></div>
         <div class="ficha" style="padding:14px 16px"><strong>Laço infinito</strong><p style="margin:6px 0 0;font-size:14.5px;color:var(--ink-2)">Esquecer o <code class="inl">i = i + 1</code> trava o Java para sempre. O depurador para em 20 000 passos e avisa.</p></div>
       </div>
+
+      <h4>Perguntas do Roteiro 6 · treino e extra credit</h4>
+      <p class="prose">Mesmo formato do Roteiro 5: <strong>sobre o roteiro</strong>, <strong>sobre as funções</strong> e <strong>implemente você</strong> (<code class="inl">!=</code> e <code class="inl">&gt;=</code>, else if, for estilo C, break, repeat, tipagem forte…). Os exercícios adicionais do enunciado estão aqui.</p>
+      <div data-perguntas="r6"></div>
 
       <div class="prose" style="margin-top:22px">
         <h4>Extra credit</h4>

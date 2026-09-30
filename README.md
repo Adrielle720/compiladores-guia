@@ -1,7 +1,7 @@
 # compiladores-guia
 
 > **Esta é uma cópia do guia de [Oscar Rodrigues Filho](https://github.com/OscarRodriguesFilho/compiladores-guia)**, mantida por Adrielle para estudo.
-> O acréscimo é a seção **R6 · v2.1**, um depurador animado do Roteiro 6 em Java (arquivos em [`r6/`](r6/)). Todo o resto é trabalho do Oscar.
+> Os acréscimos são as seções **R5 · v2.0** e **R6 · v2.1**, com depurador animado em Java e perguntas de treino e extra credit de cada roteiro (arquivos em [`adrielle/`](adrielle/)). Todo o resto é trabalho do Oscar.
 >
 > 🔗 Esta versão: https://adrielle720.github.io/compiladores-guia/
 
