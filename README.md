@@ -1,5 +1,10 @@
 # compiladores-guia
 
+> **Esta é uma cópia do guia de [Oscar Rodrigues Filho](https://github.com/OscarRodriguesFilho/compiladores-guia)**, mantida por Adrielle para estudo.
+> O acréscimo é a seção **R6 · v2.1**, um depurador animado do Roteiro 6 em Java (arquivos em [`r6/`](r6/)). Todo o resto é trabalho do Oscar.
+>
+> 🔗 Esta versão: https://adrielle720.github.io/compiladores-guia/
+
 **Sete Classes, Quatro Roteiros** — guia interativo da disciplina de Compiladores (Linguagens & Paradigmas, Insper).
 
 🔗 **[Abrir o site](https://oscarrodriguesfilho.github.io/compiladores-guia/)**

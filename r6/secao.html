@@ -1,0 +1,122 @@
+    <!-- ---------------- R6 ---------------- -->
+    <section id="r6" class="painel">
+      <div class="rot-head">
+        <span class="ver">v2.1</span>
+        <span class="meta">
+          <span class="eyebrow">Roteiro 6 · booleanos, if, for e Scanln · em Java</span>
+          <h3 style="font-size:clamp(1.4rem,2.8vw,1.85rem);font-weight:600">A linguagem aprende a decidir e a repetir</h3>
+          <span class="mudancas"><span class="mud novo">AND OR NOT</span><span class="mud novo">EQ GT LT</span><span class="mud novo">IF WHILE ELSE READ</span><span class="mud novo">OPEN_BRA CLOSE_BRA</span><span class="mud novo">If · While · Read</span><span class="mud estr">parseBlock</span><span class="mud estr">parseBoolExpression · parseBoolTerm · parseRelExpression</span></span>
+        </span>
+      </div>
+
+      <p class="prose">Até o Roteiro 5, todo programa rodava cada linha exatamente uma vez, de cima para baixo. O Roteiro 6 traz duas coisas novas: a execução passa a <strong>escolher</strong> um caminho (<code class="inl">if</code>/<code class="inl">else</code>) e a <strong>voltar</strong> para trás (<code class="inl">for</code>, que em Go faz o papel do while). Para isso aparecem os operadores booleanos e relacionais, as chaves de bloco e a leitura do terminal. A meta do roteiro é o fatorial:</p>
+
+      <div class="code syn"><pre>i = 1
+n = 5
+f = 1
+<span class="k">if</span> n &lt; 2 {
+    f = 1
+} <span class="k">else</span> {
+    <span class="k">for</span> i &lt; n || i == n {
+        f = f * i
+        i = i + 1
+    }
+}</pre></div>
+
+      <p class="prose" style="background:#fff8e8;border:1px solid #efd9a9;border-radius:8px;padding:10px 13px"><strong>Esta aba é em Java.</strong> O código ativo do depurador é uma <em>referência</em> do Roteiro 6, escrita no mesmo estilo de um <code class="inl">main.java</code> do Roteiro 5 (classes <code class="inl">Lexer</code>, <code class="inl">Parser</code>, <code class="inl">Node</code>, enum <code class="inl">TipoToken</code>). O enunciado pede que você escreva a sua própria EBNF: use isto para estudar, não para copiar.</p>
+
+      <div class="tab-wrap">
+        <table class="tab matriz r6-matriz">
+          <thead><tr><th>peça</th><th>v2.0 (Roteiro 5)</th><th>v2.1 (Roteiro 6)</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">Lexer</td><td>= ASSIGN, END, PRINT, IDEN</td><td class="nasce">+ lookahead de 1 caractere (== &amp;&amp; ||), ! &gt; &lt; { }, if for else Scanln</td></tr>
+            <tr><td class="mono">BinOp / UnOp</td><td>+ - * / e sinal</td><td class="nasce">+ == &gt; &lt; &amp;&amp; || e ! (devolvem 1 ou 0)</td></tr>
+            <tr><td class="mono">If</td><td class="ausente">—</td><td class="nasce">nasce · 2 ou 3 filhos</td></tr>
+            <tr><td class="mono">While</td><td class="ausente">—</td><td class="nasce">nasce · 2 filhos</td></tr>
+            <tr><td class="mono">Read</td><td class="ausente">—</td><td class="nasce">nasce · 0 filhos, lê o stdin</td></tr>
+            <tr><td class="mono">Block</td><td>só a raiz</td><td class="nasce">também cada { … }, via parseBlock()</td></tr>
+            <tr><td class="mono">Parser</td><td>program → statement → expression → term → factor</td><td class="nasce">+ block, boolExpression → boolTerm → relExpression por cima do expression</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>A gramática (uma proposta)</h4>
+      <p class="prose">O diagrama da aula é o de C, com parênteses no if. Adaptado para o Go, fica assim. As linhas marcadas com ★ são novas em relação ao Roteiro 5:</p>
+      <div class="code syn"><pre>PROGRAM         = { STATEMENT } ;
+BLOCK           = <span class="s">"{"</span>, { STATEMENT }, <span class="s">"}"</span> ;                              <span class="c">★</span>
+STATEMENT       = ( λ | ASSIGNMENT | PRINT | IF | FOR ), <span class="s">"\n"</span> ;
+ASSIGNMENT      = IDENTIFIER, <span class="s">"="</span>, BOOL_EXPRESSION ;
+PRINT           = <span class="s">"Println"</span>, <span class="s">"("</span>, BOOL_EXPRESSION, <span class="s">")"</span> ;
+IF              = <span class="s">"if"</span>, BOOL_EXPRESSION, BLOCK, [ <span class="s">"else"</span>, BLOCK ] ;          <span class="c">★</span>
+FOR             = <span class="s">"for"</span>, BOOL_EXPRESSION, BLOCK ;                           <span class="c">★</span>
+BOOL_EXPRESSION = BOOL_TERM, { <span class="s">"||"</span>, BOOL_TERM } ;                        <span class="c">★</span>
+BOOL_TERM       = REL_EXPRESSION, { <span class="s">"&amp;&amp;"</span>, REL_EXPRESSION } ;              <span class="c">★</span>
+REL_EXPRESSION  = EXPRESSION, { (<span class="s">"=="</span> | <span class="s">"&gt;"</span> | <span class="s">"&lt;"</span>), EXPRESSION } ;         <span class="c">★</span>
+EXPRESSION      = TERM, { (<span class="s">"+"</span> | <span class="s">"-"</span>), TERM } ;
+TERM            = FACTOR, { (<span class="s">"*"</span> | <span class="s">"/"</span>), FACTOR } ;
+FACTOR          = NUMBER | IDENTIFIER | (<span class="s">"+"</span> | <span class="s">"-"</span> | <span class="s">"!"</span>), FACTOR
+                | <span class="s">"("</span>, BOOL_EXPRESSION, <span class="s">")"</span> | <span class="s">"Scanln"</span>, <span class="s">"("</span>, <span class="s">")"</span> ;      <span class="c">★</span></pre></div>
+
+      <p class="prose">A precedência sai da escada de funções, igual ao Roteiro 3: <strong>quanto mais fundo o degrau, mais forte o operador</strong>. Da mais forte para a mais fraca: <code class="inl">! + -</code> (unários) → <code class="inl">* /</code> → <code class="inl">+ -</code> → <code class="inl">== &gt; &lt;</code> → <code class="inl">&amp;&amp;</code> → <code class="inl">||</code>. Por isso <code class="inl">1 + 2 * 3 == 7 &amp;&amp; !0 || 0</code> se lê como <code class="inl">(((1 + (2*3)) == 7) &amp;&amp; (!0)) || 0</code>. Carregue esse exemplo no depurador e veja a árvore.</p>
+
+      <div class="antes-depois">
+        <div class="ad-col antes">
+          <span class="rot">v2.0 — '=' é sempre ASSIGN</span>
+          <div class="code"><pre>} <span class="k">else if</span> (c == <span class="s">'='</span>) {
+    next = <span class="k">new</span> Token(ASSIGN, 0);
+    position++;
+}</pre></div>
+        </div>
+        <div class="ad-col depois">
+          <span class="rot">v2.1 — olha um caractere à frente</span>
+          <div class="code"><pre>} <span class="k">else if</span> (c == <span class="s">'='</span>) {
+    <span class="k">if</span> (source.charAt(position + 1) == <span class="s">'='</span>) {
+        next = <span class="k">new</span> Token(EQ, 0);  position += 2;
+    } <span class="k">else</span> {
+        next = <span class="k">new</span> Token(ASSIGN, 0); position++;
+    }
+}</pre></div>
+        </div>
+      </div>
+
+      <h4>Depurador animado — Roteiro 6</h4>
+      <p class="prose">Escreva um programa (ou escolha um exemplo) e aperte <strong>▶ Rodar</strong>. Na <strong>fita</strong>, cada token entra quando o Parser chama <code class="inl">selectNext()</code>; os consumidos ficam riscados e o <code class="inl">next</code> fica em destaque. A <strong>pilha</strong> mostra quem chamou quem: a moldura vermelha está rodando, a verde está devolvendo um valor. Na <strong>AST</strong>, os nós surgem enquanto o Parser os cria e, na fase 2, acendem conforme o <code class="inl">evaluate()</code> desce e mostram o valor (↩) quando sobem. O <strong>código</strong> é o método Java que está rodando, com a linha acesa. A faixa colorida embaixo da linha do tempo mostra as fases: verde é o Léxico, azul o Sintático, laranja o Semântico.</p>
+      <div data-r6></div>
+
+      <h4>Base de testes</h4>
+      <p class="prose">O roteiro pede um programa com laços e condicionais usando and/or/not e leitura do terminal. Clique numa entrada para carregá-la no depurador. As saídas abaixo foram conferidas rodando a referência Java de verdade.</p>
+      <div class="tab-wrap">
+        <table class="tab">
+          <thead><tr><th>programa</th><th>stdin</th><th>saída</th><th>o que mostra</th></tr></thead>
+          <tbody>
+            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="n = Scanln()\ni = 0\nfor i &lt; n &amp;&amp; !(i == 3) {\n    Println(i)\n    i = i + 1\n}" data-stdin="10\n">for i &lt; n &amp;&amp; !(i == 3)</button></td><td class="mono">10</td><td class="sai">0 1 2</td><td class="pq">laço com and + not; para no 3 mesmo com n = 10</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="x = Scanln()\ny = Scanln()\nif x &gt; y &amp;&amp; !(x == 0) {\n    Println(x)\n} else {\n    Println(y)\n}" data-stdin="7\n3\n">if x &gt; y &amp;&amp; !(x == 0)</button></td><td class="mono">7, 3</td><td class="sai">7</td><td class="pq">condicional com and + not + Scanln</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="i = 0\nfor i &lt; 3 {\n    j = 0\n    for j &lt; 2 {\n        Println(i * 10 + j)\n        j = j + 1\n    }\n    i = i + 1\n}">for dentro de for</button></td><td class="mono">—</td><td class="sai">0 1 10 11 20 21</td><td class="pq">Block dentro de Block: a pilha de evaluate() fica funda</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="Println(!1 == 0)">Println(!1 == 0)</button></td><td class="mono">—</td><td class="sai">1</td><td class="pq">! é unário, mais forte que ==: (!1) == 0</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="if 1 {\n    Println(1)\n}\nelse {\n    Println(2)\n}">else na linha de baixo</button></td><td class="mono">—</td><td class="sai erro">[Parser] Unexpected token in statement: ELSE</td><td class="pq">o "\n" depois do } já fechou o if</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="if 1 {\nPrintln(1)">bloco sem fechar</button></td><td class="mono">—</td><td class="sai erro">[Parser] Expected }</td><td class="pq">parseBlock encontrou EOF</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="x = 1 &amp; 2">x = 1 &amp; 2</button></td><td class="mono">—</td><td class="sai erro">[Lexer] Invalid Symbol &amp;</td><td class="pq">só existe &amp;&amp;</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="x = 2 &gt;= 1">x = 2 &gt;= 1</button></td><td class="mono">—</td><td class="sai erro">[Parser] Unexpected token in factor: ASSIGN</td><td class="pq">&gt;= não existe: vira GT e depois ASSIGN</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="x = Scanln()" data-stdin="abc\n">Scanln com texto</button></td><td class="mono">abc</td><td class="sai erro">[Semantic] Scanln: invalid integer abc</td><td class="pq">só na execução se sabe o que o usuário digitou</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="if 1 &gt; 0 || 1 / 0 == 0 {\n    Println(1)\n}">sem curto-circuito</button></td><td class="mono">—</td><td class="sai erro">[Semantic] Division by zero</td><td class="pq">o BinOp avalia os DOIS filhos antes de olhar o ||</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Pegadinhas</h4>
+      <div class="grade-3" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px">
+        <div class="ficha" style="padding:14px 16px"><strong>O "\n" depois do "{"</strong><p style="margin:6px 0 0;font-size:14.5px;color:var(--ink-2)">É só uma linha vazia dentro do bloco: vira um NoOp. Nenhuma regra especial é necessária, e você vê esse NoOp na AST.</p></div>
+        <div class="ficha" style="padding:14px 16px"><strong>O "\n" depois do "}"</strong><p style="margin:6px 0 0;font-size:14.5px;color:var(--ink-2)">Fecha o statement do if/for. Por isso o <code class="inl">} else {</code> precisa ficar numa linha só, que é também a regra do Go.</p></div>
+        <div class="ficha" style="padding:14px 16px"><strong>Booleano é int</strong><p style="margin:6px 0 0;font-size:14.5px;color:var(--ink-2)">Relacionais devolvem 1 ou 0, e If/While testam <code class="inl">!= 0</code>. Por isso <code class="inl">Println(3 &gt; 2)</code> imprime 1.</p></div>
+        <div class="ficha" style="padding:14px 16px"><strong>Scanln é FACTOR</strong><p style="margin:6px 0 0;font-size:14.5px;color:var(--ink-2)">Ele devolve valor, então pode aparecer no meio da conta: <code class="inl">x = Scanln() + 1</code>. Já o Println é statement.</p></div>
+        <div class="ficha" style="padding:14px 16px"><strong>While reavalia a condição</strong><p style="margin:6px 0 0;font-size:14.5px;color:var(--ink-2)">Um laço de 3 voltas avalia a condição 4 vezes. No depurador, veja <code class="inl">volta</code> subir na pilha.</p></div>
+        <div class="ficha" style="padding:14px 16px"><strong>Laço infinito</strong><p style="margin:6px 0 0;font-size:14.5px;color:var(--ink-2)">Esquecer o <code class="inl">i = i + 1</code> trava o Java para sempre. O depurador para em 20 000 passos e avisa.</p></div>
+      </div>
+
+      <div class="prose" style="margin-top:22px">
+        <h4>Extra credit</h4>
+        <p><strong>if como expressão</strong> (<code class="inl">n = if x &gt; 2 { 5 } else { 3 }</code>): um novo caminho no FACTOR, com a maior precedência de todas, que devolve um nó de 3 filhos (condição, valor-então, valor-senão). O evaluate dele devolve um dos dois valores, em vez de 0. <strong>for estilo C</strong> (<code class="inl">for i = 0; i &lt; n; i = i + 1 { … }</code>) pode ser só açúcar sintático: o Parser monta <code class="inl">Block[ Assignment(init), While(cond, Block[ corpo…, Assignment(passo) ]) ]</code>, sem nenhuma classe nova.</p>
+      </div>
+
+      <a class="proxima" href="#colinha"><span><span class="lbl">Próxima seção</span><span class="tt">Colinha · Como acrescentar um operador</span></span><span aria-hidden="true">→</span></a>
+    </section>

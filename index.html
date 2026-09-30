@@ -1028,6 +1028,13 @@ footer.fim{margin-top:44px;padding-top:20px;border-top:1px solid var(--rule);fon
         <a class="sn-sub sn-s-lex" href="#r2" data-sub="r2"><span class="n">v1.0</span>Separação de fases</a>
         <a class="sn-sub sn-s-syn" href="#r3" data-sub="r3"><span class="n">v1.1</span>Precedência</a>
         <a class="sn-sub sn-s-sem" href="#r4" data-sub="r4"><span class="n">v1.2</span>A AST</a>
+<!-- R6:nav -->
+        <a class="sn-sub sn-s-err" href="#r6" data-sub="r6"><span class="n">v2.1</span>Roteiro 6 · Java</a>
+<!-- /R6:nav -->
+
+
+
+
         <a class="sn-sub sn-s-sem" href="#colinha" data-sec="colinha">Operador novo · colinha</a>
       </div>
     </div>
@@ -3492,6 +3499,130 @@ SYMBOLS = { ..., <span class="s">"!"</span>: <span class="s">"FACT"</span> }
 
       <a class="proxima" href="#colinha"><span><span class="lbl">Próxima seção</span><span class="tt">Colinha · Como acrescentar um operador</span></span><span class="seta">&#8594;</span></a>
     </section>
+<!-- R6:secao -->
+    <!-- ---------------- R6 ---------------- -->
+    <section id="r6" class="painel">
+      <div class="rot-head">
+        <span class="ver">v2.1</span>
+        <span class="meta">
+          <span class="eyebrow">Roteiro 6 · booleanos, if, for e Scanln · em Java</span>
+          <h3 style="font-size:clamp(1.4rem,2.8vw,1.85rem);font-weight:600">A linguagem aprende a decidir e a repetir</h3>
+          <span class="mudancas"><span class="mud novo">AND OR NOT</span><span class="mud novo">EQ GT LT</span><span class="mud novo">IF WHILE ELSE READ</span><span class="mud novo">OPEN_BRA CLOSE_BRA</span><span class="mud novo">If · While · Read</span><span class="mud estr">parseBlock</span><span class="mud estr">parseBoolExpression · parseBoolTerm · parseRelExpression</span></span>
+        </span>
+      </div>
+
+      <p class="prose">Até o Roteiro 5, todo programa rodava cada linha exatamente uma vez, de cima para baixo. O Roteiro 6 traz duas coisas novas: a execução passa a <strong>escolher</strong> um caminho (<code class="inl">if</code>/<code class="inl">else</code>) e a <strong>voltar</strong> para trás (<code class="inl">for</code>, que em Go faz o papel do while). Para isso aparecem os operadores booleanos e relacionais, as chaves de bloco e a leitura do terminal. A meta do roteiro é o fatorial:</p>
+
+      <div class="code syn"><pre>i = 1
+n = 5
+f = 1
+<span class="k">if</span> n &lt; 2 {
+    f = 1
+} <span class="k">else</span> {
+    <span class="k">for</span> i &lt; n || i == n {
+        f = f * i
+        i = i + 1
+    }
+}</pre></div>
+
+      <p class="prose" style="background:#fff8e8;border:1px solid #efd9a9;border-radius:8px;padding:10px 13px"><strong>Esta aba é em Java.</strong> O código ativo do depurador é uma <em>referência</em> do Roteiro 6, escrita no mesmo estilo de um <code class="inl">main.java</code> do Roteiro 5 (classes <code class="inl">Lexer</code>, <code class="inl">Parser</code>, <code class="inl">Node</code>, enum <code class="inl">TipoToken</code>). O enunciado pede que você escreva a sua própria EBNF: use isto para estudar, não para copiar.</p>
+
+      <div class="tab-wrap">
+        <table class="tab matriz r6-matriz">
+          <thead><tr><th>peça</th><th>v2.0 (Roteiro 5)</th><th>v2.1 (Roteiro 6)</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">Lexer</td><td>= ASSIGN, END, PRINT, IDEN</td><td class="nasce">+ lookahead de 1 caractere (== &amp;&amp; ||), ! &gt; &lt; { }, if for else Scanln</td></tr>
+            <tr><td class="mono">BinOp / UnOp</td><td>+ - * / e sinal</td><td class="nasce">+ == &gt; &lt; &amp;&amp; || e ! (devolvem 1 ou 0)</td></tr>
+            <tr><td class="mono">If</td><td class="ausente">—</td><td class="nasce">nasce · 2 ou 3 filhos</td></tr>
+            <tr><td class="mono">While</td><td class="ausente">—</td><td class="nasce">nasce · 2 filhos</td></tr>
+            <tr><td class="mono">Read</td><td class="ausente">—</td><td class="nasce">nasce · 0 filhos, lê o stdin</td></tr>
+            <tr><td class="mono">Block</td><td>só a raiz</td><td class="nasce">também cada { … }, via parseBlock()</td></tr>
+            <tr><td class="mono">Parser</td><td>program → statement → expression → term → factor</td><td class="nasce">+ block, boolExpression → boolTerm → relExpression por cima do expression</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>A gramática (uma proposta)</h4>
+      <p class="prose">O diagrama da aula é o de C, com parênteses no if. Adaptado para o Go, fica assim. As linhas marcadas com ★ são novas em relação ao Roteiro 5:</p>
+      <div class="code syn"><pre>PROGRAM         = { STATEMENT } ;
+BLOCK           = <span class="s">"{"</span>, { STATEMENT }, <span class="s">"}"</span> ;                              <span class="c">★</span>
+STATEMENT       = ( λ | ASSIGNMENT | PRINT | IF | FOR ), <span class="s">"\n"</span> ;
+ASSIGNMENT      = IDENTIFIER, <span class="s">"="</span>, BOOL_EXPRESSION ;
+PRINT           = <span class="s">"Println"</span>, <span class="s">"("</span>, BOOL_EXPRESSION, <span class="s">")"</span> ;
+IF              = <span class="s">"if"</span>, BOOL_EXPRESSION, BLOCK, [ <span class="s">"else"</span>, BLOCK ] ;          <span class="c">★</span>
+FOR             = <span class="s">"for"</span>, BOOL_EXPRESSION, BLOCK ;                           <span class="c">★</span>
+BOOL_EXPRESSION = BOOL_TERM, { <span class="s">"||"</span>, BOOL_TERM } ;                        <span class="c">★</span>
+BOOL_TERM       = REL_EXPRESSION, { <span class="s">"&amp;&amp;"</span>, REL_EXPRESSION } ;              <span class="c">★</span>
+REL_EXPRESSION  = EXPRESSION, { (<span class="s">"=="</span> | <span class="s">"&gt;"</span> | <span class="s">"&lt;"</span>), EXPRESSION } ;         <span class="c">★</span>
+EXPRESSION      = TERM, { (<span class="s">"+"</span> | <span class="s">"-"</span>), TERM } ;
+TERM            = FACTOR, { (<span class="s">"*"</span> | <span class="s">"/"</span>), FACTOR } ;
+FACTOR          = NUMBER | IDENTIFIER | (<span class="s">"+"</span> | <span class="s">"-"</span> | <span class="s">"!"</span>), FACTOR
+                | <span class="s">"("</span>, BOOL_EXPRESSION, <span class="s">")"</span> | <span class="s">"Scanln"</span>, <span class="s">"("</span>, <span class="s">")"</span> ;      <span class="c">★</span></pre></div>
+
+      <p class="prose">A precedência sai da escada de funções, igual ao Roteiro 3: <strong>quanto mais fundo o degrau, mais forte o operador</strong>. Da mais forte para a mais fraca: <code class="inl">! + -</code> (unários) → <code class="inl">* /</code> → <code class="inl">+ -</code> → <code class="inl">== &gt; &lt;</code> → <code class="inl">&amp;&amp;</code> → <code class="inl">||</code>. Por isso <code class="inl">1 + 2 * 3 == 7 &amp;&amp; !0 || 0</code> se lê como <code class="inl">(((1 + (2*3)) == 7) &amp;&amp; (!0)) || 0</code>. Carregue esse exemplo no depurador e veja a árvore.</p>
+
+      <div class="antes-depois">
+        <div class="ad-col antes">
+          <span class="rot">v2.0 — '=' é sempre ASSIGN</span>
+          <div class="code"><pre>} <span class="k">else if</span> (c == <span class="s">'='</span>) {
+    next = <span class="k">new</span> Token(ASSIGN, 0);
+    position++;
+}</pre></div>
+        </div>
+        <div class="ad-col depois">
+          <span class="rot">v2.1 — olha um caractere à frente</span>
+          <div class="code"><pre>} <span class="k">else if</span> (c == <span class="s">'='</span>) {
+    <span class="k">if</span> (source.charAt(position + 1) == <span class="s">'='</span>) {
+        next = <span class="k">new</span> Token(EQ, 0);  position += 2;
+    } <span class="k">else</span> {
+        next = <span class="k">new</span> Token(ASSIGN, 0); position++;
+    }
+}</pre></div>
+        </div>
+      </div>
+
+      <h4>Depurador animado — Roteiro 6</h4>
+      <p class="prose">Escreva um programa (ou escolha um exemplo) e aperte <strong>▶ Rodar</strong>. Na <strong>fita</strong>, cada token entra quando o Parser chama <code class="inl">selectNext()</code>; os consumidos ficam riscados e o <code class="inl">next</code> fica em destaque. A <strong>pilha</strong> mostra quem chamou quem: a moldura vermelha está rodando, a verde está devolvendo um valor. Na <strong>AST</strong>, os nós surgem enquanto o Parser os cria e, na fase 2, acendem conforme o <code class="inl">evaluate()</code> desce e mostram o valor (↩) quando sobem. O <strong>código</strong> é o método Java que está rodando, com a linha acesa. A faixa colorida embaixo da linha do tempo mostra as fases: verde é o Léxico, azul o Sintático, laranja o Semântico.</p>
+      <div data-r6></div>
+
+      <h4>Base de testes</h4>
+      <p class="prose">O roteiro pede um programa com laços e condicionais usando and/or/not e leitura do terminal. Clique numa entrada para carregá-la no depurador. As saídas abaixo foram conferidas rodando a referência Java de verdade.</p>
+      <div class="tab-wrap">
+        <table class="tab">
+          <thead><tr><th>programa</th><th>stdin</th><th>saída</th><th>o que mostra</th></tr></thead>
+          <tbody>
+            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="n = Scanln()\ni = 0\nfor i &lt; n &amp;&amp; !(i == 3) {\n    Println(i)\n    i = i + 1\n}" data-stdin="10\n">for i &lt; n &amp;&amp; !(i == 3)</button></td><td class="mono">10</td><td class="sai">0 1 2</td><td class="pq">laço com and + not; para no 3 mesmo com n = 10</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="x = Scanln()\ny = Scanln()\nif x &gt; y &amp;&amp; !(x == 0) {\n    Println(x)\n} else {\n    Println(y)\n}" data-stdin="7\n3\n">if x &gt; y &amp;&amp; !(x == 0)</button></td><td class="mono">7, 3</td><td class="sai">7</td><td class="pq">condicional com and + not + Scanln</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="i = 0\nfor i &lt; 3 {\n    j = 0\n    for j &lt; 2 {\n        Println(i * 10 + j)\n        j = j + 1\n    }\n    i = i + 1\n}">for dentro de for</button></td><td class="mono">—</td><td class="sai">0 1 10 11 20 21</td><td class="pq">Block dentro de Block: a pilha de evaluate() fica funda</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="Println(!1 == 0)">Println(!1 == 0)</button></td><td class="mono">—</td><td class="sai">1</td><td class="pq">! é unário, mais forte que ==: (!1) == 0</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="if 1 {\n    Println(1)\n}\nelse {\n    Println(2)\n}">else na linha de baixo</button></td><td class="mono">—</td><td class="sai erro">[Parser] Unexpected token in statement: ELSE</td><td class="pq">o "\n" depois do } já fechou o if</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="if 1 {\nPrintln(1)">bloco sem fechar</button></td><td class="mono">—</td><td class="sai erro">[Parser] Expected }</td><td class="pq">parseBlock encontrou EOF</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="x = 1 &amp; 2">x = 1 &amp; 2</button></td><td class="mono">—</td><td class="sai erro">[Lexer] Invalid Symbol &amp;</td><td class="pq">só existe &amp;&amp;</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="x = 2 &gt;= 1">x = 2 &gt;= 1</button></td><td class="mono">—</td><td class="sai erro">[Parser] Unexpected token in factor: ASSIGN</td><td class="pq">&gt;= não existe: vira GT e depois ASSIGN</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="x = Scanln()" data-stdin="abc\n">Scanln com texto</button></td><td class="mono">abc</td><td class="sai erro">[Semantic] Scanln: invalid integer abc</td><td class="pq">só na execução se sabe o que o usuário digitou</td></tr>
+            <tr><td class="ent"><button type="button" class="preset" data-r6-abrir="if 1 &gt; 0 || 1 / 0 == 0 {\n    Println(1)\n}">sem curto-circuito</button></td><td class="mono">—</td><td class="sai erro">[Semantic] Division by zero</td><td class="pq">o BinOp avalia os DOIS filhos antes de olhar o ||</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Pegadinhas</h4>
+      <div class="grade-3" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px">
+        <div class="ficha" style="padding:14px 16px"><strong>O "\n" depois do "{"</strong><p style="margin:6px 0 0;font-size:14.5px;color:var(--ink-2)">É só uma linha vazia dentro do bloco: vira um NoOp. Nenhuma regra especial é necessária, e você vê esse NoOp na AST.</p></div>
+        <div class="ficha" style="padding:14px 16px"><strong>O "\n" depois do "}"</strong><p style="margin:6px 0 0;font-size:14.5px;color:var(--ink-2)">Fecha o statement do if/for. Por isso o <code class="inl">} else {</code> precisa ficar numa linha só, que é também a regra do Go.</p></div>
+        <div class="ficha" style="padding:14px 16px"><strong>Booleano é int</strong><p style="margin:6px 0 0;font-size:14.5px;color:var(--ink-2)">Relacionais devolvem 1 ou 0, e If/While testam <code class="inl">!= 0</code>. Por isso <code class="inl">Println(3 &gt; 2)</code> imprime 1.</p></div>
+        <div class="ficha" style="padding:14px 16px"><strong>Scanln é FACTOR</strong><p style="margin:6px 0 0;font-size:14.5px;color:var(--ink-2)">Ele devolve valor, então pode aparecer no meio da conta: <code class="inl">x = Scanln() + 1</code>. Já o Println é statement.</p></div>
+        <div class="ficha" style="padding:14px 16px"><strong>While reavalia a condição</strong><p style="margin:6px 0 0;font-size:14.5px;color:var(--ink-2)">Um laço de 3 voltas avalia a condição 4 vezes. No depurador, veja <code class="inl">volta</code> subir na pilha.</p></div>
+        <div class="ficha" style="padding:14px 16px"><strong>Laço infinito</strong><p style="margin:6px 0 0;font-size:14.5px;color:var(--ink-2)">Esquecer o <code class="inl">i = i + 1</code> trava o Java para sempre. O depurador para em 20 000 passos e avisa.</p></div>
+      </div>
+
+      <div class="prose" style="margin-top:22px">
+        <h4>Extra credit</h4>
+        <p><strong>if como expressão</strong> (<code class="inl">n = if x &gt; 2 { 5 } else { 3 }</code>): um novo caminho no FACTOR, com a maior precedência de todas, que devolve um nó de 3 filhos (condição, valor-então, valor-senão). O evaluate dele devolve um dos dois valores, em vez de 0. <strong>for estilo C</strong> (<code class="inl">for i = 0; i &lt; n; i = i + 1 { … }</code>) pode ser só açúcar sintático: o Parser monta <code class="inl">Block[ Assignment(init), While(cond, Block[ corpo…, Assignment(passo) ]) ]</code>, sem nenhuma classe nova.</p>
+      </div>
+
+      <a class="proxima" href="#colinha"><span><span class="lbl">Próxima seção</span><span class="tt">Colinha · Como acrescentar um operador</span></span><span aria-hidden="true">→</span></a>
+    </section>
+<!-- /R6:secao -->
   </div>
 </section>
 
@@ -7415,5 +7546,1697 @@ var DG = (function () {
 
 </script>
 
+<!-- R6:css -->
+<style>
+/* ---------- Roteiro 6: depurador animado (Java) ---------- */
+.r6{border:1px solid var(--rule);border-radius:12px;background:#fff;box-shadow:var(--sh);margin:22px 0 10px;overflow:hidden}
+.r6 .lb{font-size:12px;font-weight:650;color:var(--ink-2)}
+.r6-ent{padding:16px 20px;border-bottom:1px solid var(--rule);background:var(--sunk);display:flex;flex-direction:column;gap:10px}
+.r6-campos{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1fr);gap:14px}
+@media(max-width:820px){.r6-campos{grid-template-columns:1fr}}
+.r6-campo{display:flex;flex-direction:column;gap:6px;min-width:0}
+.r6-campo textarea{width:100%;font:13.5px/1.55 var(--m);border:1px solid #c9d5d6;border-radius:8px;padding:9px 11px;background:#fff;color:var(--ink);resize:vertical;tab-size:4}
+.r6-campo-in .btn{align-self:flex-start;margin-top:4px}
+.r6-dica{font-size:12px;color:var(--ink-3)}
+.r6-ex{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.r6-ex .preset{font-family:var(--f);font-size:12.5px}
+.r6-anim{padding:16px 20px;display:flex;flex-direction:column;gap:14px}
+.r6-vazio{font-size:13px;color:var(--ink-3)}
+.an-fase.er{background:var(--err-bg);color:#a04422;border-color:#efc3b6}
+
+/* fita */
+.r6-fita{overflow-x:auto;flex-wrap:nowrap;padding:20px 4px 6px;scrollbar-width:thin}
+.r6-fita .an-tk{white-space:nowrap;flex:none;display:inline-flex;gap:5px;align-items:baseline}
+.r6-tv{font-weight:500;color:var(--syn)}
+.an-tk.r6-novo{animation:r6-tk-entra .45s cubic-bezier(.2,.8,.3,1.2)}
+@keyframes r6-tk-entra{from{opacity:0;transform:translateX(26px) scale(.8)}to{opacity:1;transform:none}}
+
+/* grades */
+.r6-grid{grid-template-columns:275px minmax(0,1fr) minmax(0,1fr)}
+@media(max-width:1000px){.r6-grid{grid-template-columns:1fr}}
+.r6-grid2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.8fr) minmax(0,.9fr);gap:12px;align-items:stretch}
+@media(max-width:1000px){.r6-grid2{grid-template-columns:1fr}}
+.r6-grid .an-col{min-height:320px}
+.r6-grid .an-arv,.r6-grid .an-cod{max-height:440px}
+
+/* pilha */
+.r6-pilha{max-height:440px;overflow:auto}
+.r6-fr{border-left-width:4px}
+.r6-fr.r6-lex{border-left-color:var(--lex)} .r6-fr.r6-syn{border-left-color:var(--syn)} .r6-fr.r6-sem{border-left-color:var(--sem)}
+.r6-fr .nm{overflow-wrap:anywhere}
+.r6-loc{display:flex;flex-wrap:wrap;gap:2px 10px;font:11.5px var(--m);color:var(--ink-2)}
+.r6-loc i{font-style:normal;color:var(--ink-3)}
+.r6-fr.volta.topo{border-color:#14674c;background:#e3f1ea;box-shadow:0 0 0 3px #14674c22}
+
+/* árvore */
+.r6-n.r6-folha rect{fill:#fff;stroke:#14674c}.r6-n.r6-folha text{fill:#14583f}
+.r6-n.r6-op rect{fill:#e9f0f8;stroke:#1f3f63}.r6-n.r6-op text{fill:#1f3f63}
+.r6-n.r6-stmt rect{fill:#fdf6ea;stroke:#bd711d}.r6-n.r6-stmt text{fill:#7a4a10}
+.r6-n.ativo rect{stroke:#e0392b;stroke-width:2.2}
+.r6-n.topo rect{fill:#fff1ef;stroke:#e0392b;stroke-width:2.8}
+.r6-n text.rv{fill:#bd711d;font-size:11px}
+.r6-n text.rv.r6-rv-novo{animation:r6-rv .6s ease;fill:#e0392b}
+@keyframes r6-rv{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.an-e.r6-e-novo{stroke-dasharray:1;stroke-dashoffset:1;animation:r6-traca .45s ease forwards}
+@keyframes r6-traca{to{stroke-dashoffset:0}}
+.r6-soltas{font-size:12px;color:var(--ink-3);text-align:center;padding:4px 0 2px}
+
+/* código */
+.r6-cod-h-wrap{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.r6-cod-h{text-transform:none;letter-spacing:0;font:700 12px var(--m);color:var(--ink-2)}
+.r6-tgl{font:600 11px var(--f);border:1px solid #c9d5d6;border-radius:999px;background:#fff;color:var(--green);padding:2px 9px;text-transform:none;letter-spacing:0}
+.r6-tgl[aria-pressed=true]{background:var(--green);color:#fff;border-color:var(--green)}
+.an-cod .ty{color:#9fe0d0}
+.an-cod .l.r6-pai{background:#23383f;border-left-color:#e0a458}
+.an-cod .l.on.r6-on-erro{background:#4a211b;border-left-color:#ff7b6f}
+.an-cod .l.on{animation:r6-linha .35s ease}
+@keyframes r6-linha{from{background:#6b4a22}}
+
+/* programa */
+.r6-fonte{font:14px/1.75 var(--m);white-space:pre-wrap;word-break:break-all;padding:10px 12px;max-height:280px;overflow:auto;margin:0}
+.r6-fonte .agora{background:var(--green);color:#fff;border-radius:3px;transition:background .15s}
+.r6-fonte .com{color:var(--ink-3);text-decoration:line-through}
+.r6-fonte .nl{color:#b8c4c6;font-size:.8em}
+.r6-caret{display:inline-block;width:2px;height:1.2em;background:#e0392b;margin:0 -1px;vertical-align:-.25em;animation:an-pisca 1s steps(2) infinite}
+
+/* tabela de símbolos */
+.r6-st{padding:10px 12px}
+.r6-tab{border-collapse:collapse;font:13px var(--m);width:100%}
+.r6-tab th,.r6-tab td{border-bottom:1px solid var(--rule);padding:5px 8px;text-align:left}
+.r6-tab th{font:700 10.5px var(--f);letter-spacing:.8px;text-transform:uppercase;color:var(--ink-3)}
+.r6-tab em{font:600 11px var(--f);font-style:normal;color:var(--ink-3)}
+.r6-tab tr.esc td{background:var(--sem-bg);animation:r6-flash .6s ease}
+.r6-tab tr.le td{background:var(--syn-bg)}
+@keyframes r6-flash{from{background:#f7c98b}}
+
+/* saída e stdin */
+.r6-col-io{display:flex;flex-direction:column;gap:10px;min-width:0}
+.r6-saida{min-height:90px}
+.r6-out-novo{color:#fff;animation:r6-rv .5s ease;display:inline-block}
+.r6-exc{margin-top:6px;color:#ffb4a8;overflow-wrap:anywhere;font-size:12px}
+.r6-stdin{border:1px solid var(--rule);border-radius:9px;background:#fff;padding:8px 12px;display:flex;flex-direction:column;font:13px var(--m)}
+.r6-stdin .lb{font:11px var(--f);letter-spacing:1px;text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
+.r6-stdin span.lido{text-decoration:line-through;color:var(--ink-3)}
+.r6-stdin span.prox{background:var(--sem-bg);border-radius:3px;padding:0 4px}
+
+/* narração e controles */
+.r6-narra .pn{min-width:84px;text-align:center;text-transform:uppercase;letter-spacing:.8px;font-size:11px}
+.r6-exp{display:block;font-size:13.5px;color:var(--ink-2);font-weight:400;margin-top:4px}
+.r6-exp.ok{color:var(--green);font-weight:650}
+.r6-sl-wrap{flex:1;min-width:140px;display:flex;flex-direction:column;gap:3px}
+.r6-sl-wrap input{width:100%;margin:0;accent-color:var(--green)}
+.r6-faixa{width:100%;height:6px;border-radius:3px;display:block}
+.r6-chk{font-size:12.5px;color:var(--ink-2);display:flex;gap:5px;align-items:center}
+.r6 .an-ctrl .btn{min-height:36px;padding:6px 11px}
+
+/* seção R6 */
+.r6-matriz td.nasce{color:#8a5313;font-weight:650}
+.r6-teste{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
+@media (prefers-reduced-motion: reduce){.an-tk.r6-novo,.r6-n text.rv.r6-rv-novo,.an-e.r6-e-novo,.an-cod .l.on,.r6-tab tr.esc td,.r6-out-novo,.r6-caret{animation:none!important}.an-e.r6-e-novo{stroke-dashoffset:0}}
+
+</style>
+<!-- /R6:css -->
+<!-- R6:js -->
+<script>
+/* ============================================================================
+   MOTOR — reimplementação em JavaScript de cada versão do compilador Java.
+   Cada função espelha o método Java de mesmo nome, na mesma ordem, e chama
+   T.s("chave", "narração") no ponto em que a linha correspondente do Java
+   executa. A chave aponta para a linha marcada em java/<versão>.java.
+   Roda no navegador (window.Motor) e no Node (module.exports), para os testes
+   compararem o resultado com o do Java de verdade.
+   ========================================================================== */
+(function (G) {
+  "use strict";
+
+  // ---------------------------------------------------------------- Java ---
+  // Aritmética de int de 32 bits, igual à do Java (estoura e dá a volta).
+  var I = {
+    add: function (a, b) { return (a + b) | 0; },
+    sub: function (a, b) { return (a - b) | 0; },
+    mul: function (a, b) { return Math.imul(a, b); },
+    div: function (a, b) { return (a / b) | 0; }, // trunca em direção ao zero
+    neg: function (a) { return (-a) | 0; }
+  };
+
+  function isDigit(c) { return c >= "0" && c <= "9"; }
+  var RE_LETTER = /\p{L}/u, RE_LETDIG = /[\p{L}\p{Nd}]/u, RE_ZS = /[\p{Zs}\u2028\u2029]/u;
+  function isLetter(c) { return RE_LETTER.test(c); }
+  function isLetterOrDigit(c) { return RE_LETDIG.test(c); }
+  // Character.isWhitespace: separadores Unicode (menos os "não quebráveis")
+  // e \t \n \u000B \f \r \u001C..\u001F
+  function isWhitespace(c) {
+    if (c === "\u00A0" || c === "\u2007" || c === "\u202F") return false;
+    var n = c.charCodeAt(0);
+    if ((n >= 9 && n <= 13) || (n >= 0x1c && n <= 0x1f)) return true;
+    return RE_ZS.test(c);
+  }
+  // String.trim() do Java: tira tudo que for <= ' ' nas pontas
+  function javaTrim(s) {
+    var a = 0, b = s.length;
+    while (a < b && s.charCodeAt(a) <= 32) a++;
+    while (b > a && s.charCodeAt(b - 1) <= 32) b--;
+    return s.substring(a, b);
+  }
+  // Integer.parseInt(s) para as cadeias que o Lexer monta
+  function parseIntJava(s) {
+    var ok = /^[+-]?[0-9]+$/.test(s);
+    if (ok) {
+      var n = Number(s);
+      if (n >= -2147483648 && n <= 2147483647) return n;
+    }
+    throw new JavaError("java.lang.NumberFormatException", 'For input string: "' + s + '"' + (ok ? "" : ""), null, "Java");
+  }
+
+  function JavaError(cls, msg, k, origem) {
+    this.cls = cls;          // classe Java da exceção
+    this.msg = msg;          // mensagem, exatamente como o Java imprime
+    this.k = k;              // chave da linha que lançou
+    this.origem = origem;    // "Lexer" | "Parser" | "Semantic" | "Java"
+  }
+  JavaError.prototype.toString = function () { return "Exception in thread \"main\" " + this.cls + ": " + this.msg; };
+  function LimiteErro(n) { this.n = n; }
+
+  // Tira o prefixo [Lexer]/[Parser]/[Semantic] da mensagem
+  function origemDe(msg) {
+    var m = /^\[(Lexer|Parser|Semantic|Main)\]/.exec(msg);
+    return m ? m[1] : "Java";
+  }
+
+  // --------------------------------------------------------------- Trace ---
+  function Trace(o) {
+    o = o || {};
+    this.max = o.max || 60000;
+    this.steps = [];
+    this.tokens = [];      // {tipo, txt, v, a, b, s}
+    this.nodes = [];       // {id, cls, value, kids:[{id,s}], a, b, s}
+    this.frames = [];      // {fn, k, loc, no}
+    this.st = null;        // tabela de símbolos (copiada a cada escrita)
+    this.stAlt = null;     // nome da última variável escrita
+    this.out = [];
+    this.vals = [];        // {s, id, v}  valor devolvido por um evaluate()
+    this.cur = -1;         // índice do token em lexer.next
+    this.pos = 0;          // lexer.position
+    this.lastEnd = 0;      // fim do último token consumido
+    this.hl = null;        // trecho do fonte em destaque [a, b)
+    this.fase = "main";
+    this.map = null;       // posição no código limpo -> posição no arquivo
+    this.lidos = 0;        // linhas de stdin já consumidas
+  }
+  Trace.prototype.conv = function (hl) {
+    if (!hl || !this.map) return hl;
+    var m = this.map, a = m[Math.min(hl[0], m.length - 1)];
+    var b = hl[1] > hl[0] ? m[Math.min(hl[1] - 1, m.length - 1)] + 1 : a;
+    return [a, b];
+  };
+  Trace.prototype.s = function (k, narr, x) {
+    x = x || {};
+    if (this.steps.length >= this.max) throw new LimiteErro(this.max);
+    var top = this.frames[this.frames.length - 1];
+    if (top) top.k = k;
+    var fr = new Array(this.frames.length);
+    for (var i = 0; i < this.frames.length; i++) {
+      var f = this.frames[i];
+      fr[i] = { fn: f.fn, k: f.k, loc: f.loc ? Object.assign({}, f.loc) : null, no: f.no };
+    }
+    this.steps.push({
+      k: k, narr: narr, fase: x.fase || this.fase,
+      hl: this.conv(x.hl !== undefined ? x.hl : this.hl),
+      pos: this.pos, cur: this.cur, nt: this.tokens.length,
+      fr: fr, st: this.st, stAlt: x.stAlt || null, nout: this.out.length,
+      node: x.node != null ? x.node : null, erro: x.erro || null, lidos: this.lidos
+    });
+  };
+  Trace.prototype.enter = function (fn, loc, no) {
+    var f = { fn: fn, k: null, loc: loc || null, no: no != null ? no : null };
+    this.frames.push(f);
+    return f;
+  };
+  Trace.prototype.leave = function () { this.frames.pop(); };
+  Trace.prototype.loc = function (nome, v) {
+    var f = this.frames[this.frames.length - 1];
+    if (!f.loc) f.loc = {};
+    f.loc[nome] = v;
+  };
+  Trace.prototype.tok = function (tipo, txt, v, a, b) {
+    this.tokens.push({ tipo: tipo, txt: txt, v: v, a: a, b: b, s: this.steps.length, ca: this.conv([a, b]) });
+    this.cur = this.tokens.length - 1;
+    return this.tokens[this.cur];
+  };
+  Trace.prototype.node = function (cls, value, kids, a, b) {
+    var n = { id: this.nodes.length, cls: cls, value: value, kids: [], a: a, b: b, s: this.steps.length, ca: this.conv([a, b]) };
+    for (var i = 0; i < kids.length; i++) if (kids[i]) n.kids.push({ id: kids[i].id, s: this.steps.length });
+    this.nodes.push(n);
+    return n;
+  };
+  Trace.prototype.link = function (pai, filho) { pai.kids.push({ id: filho.id, s: this.steps.length }); };
+  Trace.prototype.val = function (node, v) { this.vals.push({ s: this.steps.length, id: node.id, v: v }); };
+  Trace.prototype.stSet = function (nome, v) {
+    var novo = Object.assign({}, this.st || {});
+    novo[nome] = v;
+    this.st = novo;
+  };
+  // registra o passo de erro e lança
+  Trace.prototype.erro = function (k, cls, msg, narr) {
+    var origem = origemDe(msg);
+    if (cls !== "java.lang.RuntimeException" && origem === "Java") origem = "Java";
+    this.s(k, narr, { fase: "erro", erro: { cls: cls, msg: msg, origem: origem } });
+    throw new JavaError(cls, msg, k, origem);
+  };
+
+  function mostra(c) {
+    if (c === "\n") return "\\n";
+    if (c === "\t") return "\\t";
+    if (c === "\r") return "\\r";
+    if (c === " ") return "espaço";
+    return c;
+  }
+
+  // ======================================================================
+  //  v0.0 — Roteiro 1: uma função só, lendo caractere por caractere
+  // ======================================================================
+  function runV00(T, entrada) {
+    T.enter("Main.main");
+    T.s("main_enter", "O programa começa pelo main(). O texto digitado no terminal chega em args[0].", { hl: null });
+    T.s("main_args", "Confere se veio algum argumento. Veio: \"" + entrada + "\".");
+    T.s("main_call", "Chama avaliar(args[0]). Nesta versão não existe Lexer nem Parser: uma função faz tudo.");
+    var r = avaliar(T, entrada);
+    T.out.push(String(r));
+    T.s("main_print", "System.out.println(" + r + "): imprime o resultado e o programa termina.", { hl: null });
+    T.leave();
+  }
+  function avaliar(T, entrada) {
+    T.fase = "lexer";
+    T.enter("Main.avaliar", { posicao: 0, resultado: 0 });
+    var posicao = 0, resultado = 0, tamanho = entrada.length, numero, ini;
+    function upd() { T.loc("posicao", posicao); T.loc("resultado", resultado); T.pos = posicao; }
+    T.s("av_enter", "Entra em avaliar(). posicao = 0 aponta para o primeiro caractere; resultado começa em 0.", { hl: [0, Math.min(1, tamanho)] });
+    ini = posicao;
+    while (posicao < tamanho && entrada[posicao] === " ") posicao++;
+    upd();
+    if (posicao > ini) T.s("av_ws1", "Pula " + (posicao - ini) + " espaço(s) do começo.", { hl: [ini, posicao] });
+    if (posicao >= tamanho || !isDigit(entrada[posicao])) {
+      T.erro("av_err1", "java.lang.IllegalArgumentException", "Sintaxe inválida: esperado número no início.",
+        posicao >= tamanho ? "A entrada acabou sem nenhum número: não há o que calcular." :
+          "O primeiro caractere útil é '" + mostra(entrada[posicao]) + "', que não é dígito. A conta tem que começar com um número.");
+    }
+    T.s("av_chk1", "O caractere '" + entrada[posicao] + "' é dígito: dá para começar a ler o primeiro número.", { hl: [posicao, posicao + 1] });
+    numero = 0; ini = posicao;
+    while (posicao < tamanho && isDigit(entrada[posicao])) {
+      var d = entrada.charCodeAt(posicao) - 48;
+      numero = I.add(I.mul(numero, 10), d);
+      posicao++;
+      T.loc("numero", numero); upd();
+      T.s("av_num1_acc", "Lê o dígito '" + entrada[posicao - 1] + "': numero = numero × 10 + " + d + " = " + numero + ".", { hl: [ini, posicao] });
+    }
+    resultado = numero; upd();
+    T.s("av_res", "O primeiro número (" + numero + ") vira o resultado inicial.", { hl: [ini, posicao] });
+    for (;;) {
+      if (!(posicao < tamanho)) break;
+      T.s("av_while", "Ainda há caracteres depois da posição " + posicao + ": volta do laço principal.", { hl: [posicao, posicao + 1] });
+      ini = posicao;
+      while (posicao < tamanho && entrada[posicao] === " ") posicao++;
+      upd();
+      if (posicao > ini) T.s("av_ws2", "Pula " + (posicao - ini) + " espaço(s) antes do operador.", { hl: [ini, posicao] });
+      if (posicao >= tamanho) {
+        T.s("av_break", "Só havia espaços até o fim: sai do laço.", { hl: null });
+        break;
+      }
+      var operador = entrada[posicao];
+      T.loc("operador", operador);
+      T.s("av_op", "Guarda o caractere atual como operador: '" + mostra(operador) + "'.", { hl: [posicao, posicao + 1] });
+      if (operador !== "+" && operador !== "-") {
+        T.erro("av_op_err", "java.lang.IllegalArgumentException", "Sintaxe inválida: operador incorreto.",
+          "'" + mostra(operador) + "' não é + nem -. Nesta versão só existem esses dois operadores.");
+      }
+      posicao++; upd();
+      T.s("av_op_adv", "Operador válido. Avança uma posição.", { hl: [posicao - 1, posicao] });
+      ini = posicao;
+      while (posicao < tamanho && entrada[posicao] === " ") posicao++;
+      upd();
+      if (posicao > ini) T.s("av_ws3", "Pula " + (posicao - ini) + " espaço(s) depois do operador.", { hl: [ini, posicao] });
+      if (posicao >= tamanho || !isDigit(entrada[posicao])) {
+        T.erro("av_err2", "java.lang.IllegalArgumentException", "Sintaxe inválida: esperado número após operador.",
+          posicao >= tamanho ? "A entrada acabou logo depois do operador: faltou o segundo número." :
+            "Depois do operador veio '" + mostra(entrada[posicao]) + "', mas era preciso um dígito.");
+      }
+      numero = 0; ini = posicao;
+      while (posicao < tamanho && isDigit(entrada[posicao])) {
+        var d2 = entrada.charCodeAt(posicao) - 48;
+        numero = I.add(I.mul(numero, 10), d2);
+        posicao++;
+        T.loc("numero", numero); upd();
+        T.s("av_num2_acc", "Lê o dígito '" + entrada[posicao - 1] + "': numero = " + numero + ".", { hl: [ini, posicao] });
+      }
+      if (operador === "+") {
+        resultado = I.add(resultado, numero); upd();
+        T.s("av_plus", "Aplica a soma: resultado += " + numero + " → " + resultado + ".", { hl: [ini, posicao] });
+      } else {
+        resultado = I.sub(resultado, numero); upd();
+        T.s("av_minus", "Aplica a subtração: resultado -= " + numero + " → " + resultado + ".", { hl: [ini, posicao] });
+      }
+    }
+    T.s("av_ret", "Fim da entrada. avaliar() devolve " + resultado + ".", { hl: null });
+    T.leave();
+    T.fase = "main";
+    return resultado;
+  }
+
+  // ======================================================================
+  //  v1.x — Roteiros 2, 3 e 4: Lexer + Parser, entrada pela linha de comando
+  // ======================================================================
+  function LexerV1(T, source, ver) {
+    this.T = T; this.source = source; this.position = 0; this.next = null; this.ver = ver;
+  }
+  LexerV1.prototype.selectNext = function () {
+    var T = this.T, s = this.source, fase = T.fase;
+    if (this.next) T.lastEnd = this.next.b;
+    T.enter("Lexer.selectNext");
+    T.fase = "lexer";
+    var ini = this.position;
+    while (this.position < s.length && s[this.position] === " ") this.position++;
+    T.pos = this.position;
+    if (this.position > ini) T.s("lex_ws", "Pula " + (this.position - ini) + " espaço(s). Nesta versão só o caractere ' ' conta como espaço.", { hl: [ini, this.position] });
+    var p = this.position, c = s[p], t;
+    if (p >= s.length) {
+      this.next = t = mkTok1(T, "EOF", "", p, p);
+      T.s("lex_eof", "Chegou ao fim do texto: next = Token(\"EOF\", \"\"). Não há mais nada para ler.", { hl: [p, p] });
+    } else if (c === "+") { this.simbolo("PLUS", c, "lex_plus"); }
+    else if (c === "-") { this.simbolo("MINUS", c, "lex_minus"); }
+    else if (this.ver !== "1.0" && c === "*") { this.simbolo("MULT", c, "lex_mult"); }
+    else if (this.ver !== "1.0" && c === "/") { this.simbolo("DIV", c, "lex_div"); }
+    else if (this.ver !== "1.0" && c === "(") { this.simbolo("OPEN_PAR", c, "lex_open"); }
+    else if (this.ver !== "1.0" && c === ")") { this.simbolo("CLOSE_PAR", c, "lex_close"); }
+    else if (isDigit(c)) {
+      var acc = "";
+      while (this.position < s.length && isDigit(s[this.position])) { acc += s[this.position]; this.position++; }
+      T.pos = this.position;
+      T.s("lex_num_loop", "É dígito: continua lendo enquanto vier dígito. Juntou \"" + acc + "\".", { hl: [p, this.position] });
+      var v;
+      try { v = parseIntJava(acc); } catch (e) {
+        T.erro("lex_num", e.cls, e.msg, "\"" + acc + "\" não cabe num int de Java (máximo 2147483647). Integer.parseInt lança NumberFormatException.");
+      }
+      this.next = t = mkTok1(T, "INT", acc, p, this.position, v);
+      T.s("lex_num", "Converte \"" + acc + "\" em número: next = Token(\"INT\", " + v + ").", { hl: [p, this.position] });
+    } else {
+      T.erro("lex_err", "java.lang.RuntimeException", "[Lexer] Invalid Symbol " + c,
+        "'" + mostra(c) + "' não é espaço, operador nem dígito. O Lexer não sabe que token é esse: erro léxico.");
+    }
+    T.leave();
+    T.fase = fase;
+    return t;
+  };
+  LexerV1.prototype.simbolo = function (tipo, c, k) {
+    var T = this.T, p = this.position;
+    this.next = mkTok1(T, tipo, c, p, p + 1, c);
+    this.position++;
+    T.pos = this.position;
+    T.s(k, "Achou '" + c + "': next = Token(\"" + tipo + "\", \"" + c + "\") e position avança para " + this.position + ".", { hl: [p, p + 1] });
+  };
+  function mkTok1(T, tipo, txt, a, b, v) {
+    var t = T.tok(tipo, txt, v, a, b);
+    return { type: tipo, value: v, a: a, b: b, idx: T.cur };
+  }
+  function nomeTok1(t) { return t.type === "INT" ? "INT(" + t.value + ")" : t.type; }
+
+  function runV1(T, src, ver) {
+    T.enter("Main.main");
+    T.s("main_src", "codigoFonte = args[0] = \"" + src + "\". O texto chega inteiro, numa String só.", { hl: [0, src.length] });
+    var lexer = null;
+
+    function next() { return lexer.next; }
+    function consome(k, narr) { T.s(k, narr, { hl: [next().a, next().b] }); lexer.selectNext(); }
+    function perr(k, esperado) {
+      T.erro(k, "java.lang.RuntimeException", "[Parser] Unexpected token " + next().type + ", expected " + esperado,
+        "O Parser esperava " + esperado + " aqui, mas o token atual é " + nomeTok1(next()) + ". Erro sintático.");
+    }
+
+    // ---- v1.0: parseExpression faz tudo
+    function parseExpression10() {
+      T.enter("Parser.parseExpression", { resultado: null });
+      T.fase = "parser";
+      T.s("pe_enter", "Entra em parseExpression(). Segue o diagrama: INT, depois (+|- INT) quantas vezes vier.", { hl: [next().a, next().b] });
+      if (next().type !== "INT") perr("pe_int_err", "INT");
+      var resultado = next().value;
+      T.loc("resultado", resultado);
+      T.s("pe_res", "O token atual é " + nomeTok1(next()) + ": resultado = " + resultado + ".", { hl: [next().a, next().b] });
+      consome("pe_next1", "Já usou o número: pede o próximo token ao Lexer.");
+      while (next().type === "PLUS" || next().type === "MINUS") {
+        var operador = next().type;
+        T.loc("operador", operador);
+        T.s("pe_op", "Veio " + operador + ": guarda o operador antes de avançar.", { hl: [next().a, next().b] });
+        consome("pe_op_next", "Pede o próximo token: tem que ser um número.");
+        if (next().type !== "INT") perr("pe_int2_err", "INT");
+        if (operador === "PLUS") {
+          resultado = I.add(resultado, next().value); T.loc("resultado", resultado);
+          T.s("pe_add", "Soma: resultado += " + next().value + " → " + resultado + ".", { hl: [next().a, next().b] });
+        } else {
+          resultado = I.sub(resultado, next().value); T.loc("resultado", resultado);
+          T.s("pe_sub", "Subtrai: resultado -= " + next().value + " → " + resultado + ".", { hl: [next().a, next().b] });
+        }
+        consome("pe_next2", "Consome o número e pede o próximo token.");
+      }
+      T.s("pe_ret", "O token atual (" + nomeTok1(next()) + ") não é + nem -: sai do laço e devolve " + resultado + ".", { hl: [next().a, next().b] });
+      T.leave();
+      return resultado;
+    }
+
+    // ---- v1.1: EXPRESSION / TERM / FACTOR calculando direto
+    function parseFactor11() {
+      T.enter("Parser.parseFactor");
+      T.fase = "parser";
+      var t = next();
+      T.s("pf_enter", "Entra em parseFactor() com o token " + nomeTok1(t) + ".", { hl: [t.a, t.b] });
+      var r;
+      if (t.type === "PLUS") {
+        T.s("pf_plus_chk", "É um + unário: o FACTOR é '+' seguido de outro FACTOR.", { hl: [t.a, t.b] });
+        consome("pf_plus_next", "Consome o '+'.");
+        r = parseFactor11();
+        T.s("pf_plus_ret", "Volta da recursão com " + r + ". O + unário não muda o valor: devolve " + r + ".", { hl: null });
+        T.leave(); return r;
+      }
+      if (t.type === "MINUS") {
+        T.s("pf_minus_chk", "É um - unário: o FACTOR é '-' seguido de outro FACTOR.", { hl: [t.a, t.b] });
+        consome("pf_minus_next", "Consome o '-'.");
+        r = parseFactor11();
+        var neg = I.neg(r);
+        T.s("pf_minus_ret", "Volta da recursão com " + r + " e troca o sinal: devolve " + neg + ".", { hl: null });
+        T.leave(); return neg;
+      }
+      if (t.type === "OPEN_PAR") {
+        T.s("pf_par_chk", "É um '(': dentro vem uma EXPRESSION inteira.", { hl: [t.a, t.b] });
+        consome("pf_par_next", "Consome o '('.");
+        T.s("pf_par_call", "Chama parseExpression() de novo, recursivamente, para o que está entre parênteses.", { hl: [next().a, next().b] });
+        r = parseExpression11();
+        T.loc("resultado", r);
+        if (next().type !== "CLOSE_PAR") perr("pf_par_err", "CLOSE_PAR");
+        consome("pf_par_close_next", "Achou o ')'. Consome e fecha o parêntese.");
+        T.s("pf_par_ret", "Devolve " + r + ": o valor de dentro dos parênteses.", { hl: null });
+        T.leave(); return r;
+      }
+      if (t.type === "INT") {
+        r = t.value;
+        T.loc("resultado", r);
+        T.s("pf_int", "É um número: resultado = " + r + ".", { hl: [t.a, t.b] });
+        consome("pf_int_next", "Consome o número.");
+        T.s("pf_int_ret", "Devolve " + r + ".", { hl: null });
+        T.leave(); return r;
+      }
+      T.erro("pf_err", "java.lang.RuntimeException", "[Parser] Unexpected token " + t.type + ", expected INT, PLUS, MINUS or OPEN_PAR",
+        "Um FACTOR tem que começar com número, +, - ou '('. Veio " + nomeTok1(t) + ".");
+    }
+    function parseTerm11() {
+      T.enter("Parser.parseTerm", { resultado: null });
+      T.fase = "parser";
+      T.s("pt_enter", "Entra em parseTerm(): um FACTOR, depois (* ou / FACTOR) quantas vezes vier.", { hl: [next().a, next().b] });
+      T.s("pt_first", "Chama parseFactor() para o primeiro operando.", { hl: [next().a, next().b] });
+      var resultado = parseFactor11();
+      T.loc("resultado", resultado);
+      while (next().type === "MULT" || next().type === "DIV") {
+        var op = next().type;
+        T.loc("operador", op);
+        T.s("pt_op", "Veio " + op + ": guarda o operador.", { hl: [next().a, next().b] });
+        consome("pt_op_next", "Consome o operador. O próximo token deve começar um FACTOR.");
+        var d;
+        if (op === "MULT") {
+          T.s("pt_mult", "resultado *= parseFactor(): chama parseFactor() para o operando da direita.", { hl: [next().a, next().b] });
+          d = parseFactor11();
+          resultado = I.mul(resultado, d);
+          T.loc("resultado", resultado);
+          T.s("pt_mult", "Multiplica: resultado = " + resultado + ".", { hl: null });
+        } else {
+          T.s("pt_div", "resultado /= parseFactor(): chama parseFactor() para o divisor.", { hl: [next().a, next().b] });
+          d = parseFactor11();
+          if (d === 0) T.erro("pt_div", "java.lang.ArithmeticException", "/ by zero",
+            "O divisor deu 0. Nesta versão ninguém confere isso antes: a própria JVM lança ArithmeticException.");
+          resultado = I.div(resultado, d);
+          T.loc("resultado", resultado);
+          T.s("pt_div", "Divisão inteira: resultado = " + resultado + ".", { hl: null });
+        }
+      }
+      T.s("pt_ret", "Não veio * nem /: devolve " + resultado + ".", { hl: null });
+      T.leave();
+      return resultado;
+    }
+    function parseExpression11() {
+      T.enter("Parser.parseExpression", { resultado: null });
+      T.fase = "parser";
+      T.s("pe_enter", "Entra em parseExpression(): um TERM, depois (+ ou - TERM) quantas vezes vier.", { hl: [next().a, next().b] });
+      T.s("pe_first", "Chama parseTerm() para o primeiro operando.", { hl: [next().a, next().b] });
+      var resultado = parseTerm11();
+      T.loc("resultado", resultado);
+      while (next().type === "PLUS" || next().type === "MINUS") {
+        var op = next().type;
+        T.loc("operador", op);
+        T.s("pe_op", "Veio " + op + ": guarda o operador.", { hl: [next().a, next().b] });
+        consome("pe_op_next", "Consome o operador. O próximo pedaço é um TERM.");
+        var d;
+        if (op === "PLUS") {
+          T.s("pe_add", "resultado += parseTerm(): chama parseTerm() para o operando da direita.", { hl: [next().a, next().b] });
+          d = parseTerm11();
+          resultado = I.add(resultado, d); T.loc("resultado", resultado);
+          T.s("pe_add", "Soma: resultado = " + resultado + ".", { hl: null });
+        } else {
+          T.s("pe_sub", "resultado -= parseTerm(): chama parseTerm() para o operando da direita.", { hl: [next().a, next().b] });
+          d = parseTerm11();
+          resultado = I.sub(resultado, d); T.loc("resultado", resultado);
+          T.s("pe_sub", "Subtrai: resultado = " + resultado + ".", { hl: null });
+        }
+      }
+      T.s("pe_ret", "Não veio + nem -: devolve " + resultado + ".", { hl: null });
+      T.leave();
+      return resultado;
+    }
+
+    // ---- v1.2: mesmas funções, mas montando nós da AST
+    function parseFactor12() {
+      T.enter("Parser.parseFactor");
+      T.fase = "parser";
+      var t = next(), a0 = t.a, no;
+      T.s("pf_enter", "Entra em parseFactor() com o token " + nomeTok1(t) + ".", { hl: [t.a, t.b] });
+      if (t.type === "PLUS" || t.type === "MINUS") {
+        var op = t.type;
+        T.loc("operador", op);
+        T.s("pf_un_op", "É um " + (op === "PLUS" ? "+" : "-") + " unário: guarda \"" + op + "\".", { hl: [t.a, t.b] });
+        consome("pf_un_next", "Consome o sinal.");
+        T.s("pf_un_call", "Chama parseFactor() de novo para montar o operando.", { hl: [next().a, next().b] });
+        var filho = parseFactor12();
+        no = T.node("UnOp", op, [filho], a0, T.lastEnd);
+        T.s("pf_un_ret", "Cria UnOp(\"" + op + "\") com 1 filho e devolve o nó.", { node: no.id, hl: [a0, T.lastEnd] });
+        T.leave(); return no;
+      }
+      if (t.type === "OPEN_PAR") {
+        T.s("pf_par_chk", "É um '(': dentro vem uma EXPRESSION.", { hl: [t.a, t.b] });
+        consome("pf_par_next", "Consome o '('.");
+        T.s("pf_par_call", "Chama parseExpression() para montar a subárvore de dentro.", { hl: [next().a, next().b] });
+        no = parseExpression12();
+        if (next().type !== "CLOSE_PAR") perr("pf_par_err", "CLOSE_PAR");
+        consome("pf_par_close_next", "Achou o ')'. Consome.");
+        T.s("pf_par_ret", "Devolve o nó de dentro. Os parênteses não viram nó: a forma da árvore já guarda a ordem.", { node: no.id, hl: null });
+        T.leave(); return no;
+      }
+      if (t.type === "INT") {
+        no = T.node("IntVal", t.value, [], t.a, t.b);
+        T.s("pf_int", "É um número: cria IntVal(" + t.value + "), uma folha.", { node: no.id, hl: [t.a, t.b] });
+        consome("pf_int_next", "Consome o número.");
+        T.s("pf_int_ret", "Devolve o nó IntVal(" + t.value + ").", { node: no.id, hl: null });
+        T.leave(); return no;
+      }
+      T.erro("pf_err", "java.lang.RuntimeException", "[Parser] Unexpected token " + t.type + ", expected INT, PLUS, MINUS or OPEN_PAR",
+        "Um FACTOR tem que começar com número, +, - ou '('. Veio " + nomeTok1(t) + ".");
+    }
+    function parseTerm12() {
+      T.enter("Parser.parseTerm");
+      T.fase = "parser";
+      var a0 = next().a;
+      T.s("pt_enter", "Entra em parseTerm().", { hl: [next().a, next().b] });
+      T.s("pt_first", "Chama parseFactor() para o primeiro operando.", { hl: [next().a, next().b] });
+      var no = parseFactor12();
+      while (next().type === "MULT" || next().type === "DIV") {
+        var op = next().type;
+        T.loc("operador", op);
+        T.s("pt_op", "Veio " + op + ": o nó que já temos vai virar o filho da esquerda.", { hl: [next().a, next().b] });
+        consome("pt_op_next", "Consome o operador.");
+        T.s("pt_right", "Chama parseFactor() para montar o filho da direita.", { hl: [next().a, next().b] });
+        var dir = parseFactor12();
+        no = T.node("BinOp", op, [no, dir], a0, T.lastEnd);
+        T.s("pt_binop", "Cria BinOp(\"" + op + "\") com os dois filhos. Ele passa a ser o nó atual.", { node: no.id, hl: [a0, T.lastEnd] });
+      }
+      T.s("pt_ret", "Não veio * nem /: devolve o nó.", { node: no.id, hl: null });
+      T.leave();
+      return no;
+    }
+    function parseExpression12() {
+      T.enter("Parser.parseExpression");
+      T.fase = "parser";
+      var a0 = next().a;
+      T.s("pe_enter", "Entra em parseExpression().", { hl: [next().a, next().b] });
+      T.s("pe_first", "Chama parseTerm() para o primeiro operando.", { hl: [next().a, next().b] });
+      var no = parseTerm12();
+      while (next().type === "PLUS" || next().type === "MINUS") {
+        var op = next().type;
+        T.loc("operador", op);
+        T.s("pe_op", "Veio " + op + ": o nó atual vai virar o filho da esquerda.", { hl: [next().a, next().b] });
+        consome("pe_op_next", "Consome o operador.");
+        T.s("pe_right", "Chama parseTerm() para montar o filho da direita.", { hl: [next().a, next().b] });
+        var dir = parseTerm12();
+        no = T.node("BinOp", op, [no, dir], a0, T.lastEnd);
+        T.s("pe_binop", "Cria BinOp(\"" + op + "\"). Encadeando assim, 1-2-3 vira (1-2)-3: associativo à esquerda.", { node: no.id, hl: [a0, T.lastEnd] });
+      }
+      T.s("pe_ret", "Não veio + nem -: devolve o nó.", { node: no.id, hl: null });
+      T.leave();
+      return no;
+    }
+    function eval12(n) {
+      T.enter(n.cls + ".evaluate", null, n.id);
+      T.fase = "eval";
+      var r, e, d;
+      if (n.cls === "IntVal") {
+        r = n.value;
+        T.val(n, r);
+        T.s("ev_int", "IntVal só devolve o número que guarda: " + r + ".", { node: n.id, hl: [n.a, n.b] });
+      } else if (n.cls === "UnOp") {
+        T.s("ev_un_child", "UnOp pede ao único filho que se avalie primeiro.", { node: n.id, hl: [n.a, n.b] });
+        var x = eval12(T.nodes[n.kids[0].id]);
+        T.loc("operando", x);
+        if (n.value === "PLUS") { r = x; T.val(n, r); T.s("ev_un_pos", "Operador PLUS: devolve +" + x + " = " + r + ".", { node: n.id, hl: [n.a, n.b] }); }
+        else { r = I.neg(x); T.val(n, r); T.s("ev_un_neg", "Operador MINUS: devolve -(" + x + ") = " + r + ".", { node: n.id, hl: [n.a, n.b] }); }
+      } else {
+        T.s("ev_bin_l", "BinOp(\"" + n.value + "\") avalia primeiro o filho da esquerda.", { node: n.id, hl: [n.a, n.b] });
+        e = eval12(T.nodes[n.kids[0].id]);
+        T.loc("esquerda", e);
+        T.s("ev_bin_r", "Esquerda = " + e + ". Agora avalia o filho da direita.", { node: n.id, hl: [n.a, n.b] });
+        d = eval12(T.nodes[n.kids[1].id]);
+        T.loc("direita", d);
+        if (n.value === "PLUS") { r = I.add(e, d); T.val(n, r); T.s("ev_bin_plus", e + " + " + d + " = " + r + ".", { node: n.id, hl: [n.a, n.b] }); }
+        else if (n.value === "MINUS") { r = I.sub(e, d); T.val(n, r); T.s("ev_bin_minus", e + " - " + d + " = " + r + ".", { node: n.id, hl: [n.a, n.b] }); }
+        else if (n.value === "MULT") { r = I.mul(e, d); T.val(n, r); T.s("ev_bin_mult", e + " × " + d + " = " + r + ".", { node: n.id, hl: [n.a, n.b] }); }
+        else {
+          if (d === 0) T.erro("ev_bin_div_err", "java.lang.RuntimeException", "[Semantic] Division by zero",
+            "O divisor avaliou para 0. Não é erro de escrita, é o valor que não faz sentido: erro semântico.");
+          r = I.div(e, d); T.val(n, r);
+          T.s("ev_bin_div", e + " / " + d + " = " + r + " (divisão inteira).", { node: n.id, hl: [n.a, n.b] });
+        }
+      }
+      T.leave();
+      return r;
+    }
+
+    function run() {
+      T.enter("Parser.run");
+      T.fase = "parser";
+      lexer = new LexerV1(T, src, ver);
+      T.s("run_lexer", "Cria um Lexer em cima do texto. position = 0, next = null.", { hl: [0, 0] });
+      T.s("run_first", "Pede o primeiro token, para o Parser já ter algo para olhar.", { hl: [0, 0] });
+      lexer.selectNext();
+      var r;
+      if (ver === "1.0") { T.s("run_expr", "Chama parseExpression(): ela lê e calcula ao mesmo tempo.", { hl: [next().a, next().b] }); r = parseExpression10(); }
+      else if (ver === "1.1") { T.s("run_expr", "Chama parseExpression(), o diagrama de fora (menor precedência).", { hl: [next().a, next().b] }); r = parseExpression11(); }
+      else { T.s("run_expr", "Chama parseExpression(), que agora devolve a raiz de uma árvore.", { hl: [next().a, next().b] }); r = parseExpression12(); }
+      T.fase = "parser";
+      if (next().type !== "EOF") perr("run_err", "EOF");
+      T.s("run_ret", "O que sobrou é EOF: a entrada inteira foi usada. " + (ver === "1.2" ? "Devolve a raiz da AST." : "Devolve " + r + "."), { hl: null, node: ver === "1.2" ? r.id : null });
+      T.leave();
+      return r;
+    }
+
+    T.s("main_run", "Chama Parser.run(codigoFonte).", { hl: [0, src.length] });
+    var res = run();
+    T.fase = "main";
+    if (ver === "1.2") {
+      T.s("main_eval", "A árvore está pronta. Só agora a conta acontece: raiz.evaluate().", { node: res.id, hl: null });
+      res = eval12(res);
+      T.fase = "main";
+    }
+    T.out.push(String(res));
+    T.s("main_print", "System.out.println(" + res + ").", { hl: null });
+    T.leave();
+  }
+
+  // ======================================================================
+  //  v2.0 / v2.1 — Roteiros 5 e 6: arquivo, statements, variáveis, if/for
+  // ======================================================================
+  var R6_KW = { "if": "IF", "for": "WHILE", "else": "ELSE", "Scanln": "READ" };
+
+  function LexerV2(T, source, r6) {
+    this.T = T; this.source = source; this.position = 0; this.next = null; this.r6 = r6;
+  }
+  LexerV2.prototype.selectNext = function () {
+    var T = this.T, s = this.source, fase = T.fase;
+    if (this.next) T.lastEnd = this.next.b;
+    T.enter("Lexer.selectNext");
+    T.fase = "lexer";
+    var ini = this.position;
+    while (this.position < s.length && isWhitespace(s[this.position]) && s[this.position] !== "\n") this.position++;
+    T.pos = this.position;
+    if (this.position > ini) T.s("lex_ws", "Pula " + (this.position - ini) + " caractere(s) em branco. O '\\n' NÃO é pulado: ele vira token.", { hl: [ini, this.position] });
+    var p = this.position, c = s[p], r6 = this.r6;
+    if (p >= s.length) {
+      this.tk("EOF", "", p, p, "lex_eof", "Fim do código: next = EOF.");
+    } else if (c === "\n") {
+      this.tk("END", "\\n", p, p + 1, "lex_end", "Quebra de linha: vira o token END, que fecha um statement.");
+    } else if (c === "+") { this.tk("PLUS", c, p, p + 1, "lex_plus"); }
+    else if (c === "-") { this.tk("MINUS", c, p, p + 1, "lex_minus"); }
+    else if (c === "*") { this.tk("MULT", c, p, p + 1, "lex_mult"); }
+    else if (c === "/") { this.tk("DIV", c, p, p + 1, "lex_div"); }
+    else if (c === "(") { this.tk("OPEN_PAR", c, p, p + 1, "lex_open"); }
+    else if (c === ")") { this.tk("CLOSE_PAR", c, p, p + 1, "lex_close"); }
+    else if (c === "=") {
+      if (r6 && p + 1 < s.length && s[p + 1] === "=") {
+        this.tk("EQ", "==", p, p + 2, "lex_eq", "Achou '=' e olhou UM caractere à frente: outro '='. Então é '==' (EQ), um token só.");
+      } else {
+        this.tk("ASSIGN", c, p, p + 1, "lex_assign", r6 ? "Achou '=' e o próximo caractere não é '=': é atribuição (ASSIGN)." : null);
+      }
+    }
+    else if (r6 && c === "&") {
+      if (p + 1 < s.length && s[p + 1] === "&") this.tk("AND", "&&", p, p + 2, "lex_and", "Achou '&&': token AND.");
+      else T.erro("lex_and_err", "java.lang.RuntimeException", "[Lexer] Invalid Symbol &", "Um '&' sozinho não existe na linguagem. Só '&&'.");
+    }
+    else if (r6 && c === "|") {
+      if (p + 1 < s.length && s[p + 1] === "|") this.tk("OR", "||", p, p + 2, "lex_or", "Achou '||': token OR.");
+      else T.erro("lex_or_err", "java.lang.RuntimeException", "[Lexer] Invalid Symbol |", "Um '|' sozinho não existe na linguagem. Só '||'.");
+    }
+    else if (r6 && c === "!") { this.tk("NOT", c, p, p + 1, "lex_not"); }
+    else if (r6 && c === ">") { this.tk("GT", c, p, p + 1, "lex_gt"); }
+    else if (r6 && c === "<") { this.tk("LT", c, p, p + 1, "lex_lt"); }
+    else if (r6 && c === "{") { this.tk("OPEN_BRA", c, p, p + 1, "lex_obra"); }
+    else if (r6 && c === "}") { this.tk("CLOSE_BRA", c, p, p + 1, "lex_cbra"); }
+    else if (isDigit(c)) {
+      var acc = "";
+      while (this.position < s.length && isDigit(s[this.position])) { acc += s[this.position]; this.position++; }
+      T.pos = this.position;
+      T.s("lex_num_loop", "É dígito: acumula enquanto vier dígito. acumulado = \"" + acc + "\".", { hl: [p, this.position] });
+      var v;
+      try { v = parseIntJava(acc); } catch (e) {
+        T.erro("lex_num", e.cls, e.msg, "\"" + acc + "\" não cabe num int de Java (máximo 2147483647). Integer.parseInt lança NumberFormatException.");
+      }
+      this.position = p; // tk() avança de novo
+      this.tk("NUMERO", acc, p, p + acc.length, "lex_num", "Converte \"" + acc + "\" com Integer.parseInt: token NUMERO(" + v + ").", v);
+    }
+    else if (isLetter(c)) {
+      var w = "";
+      while (this.position < s.length && (isLetterOrDigit(s[this.position]) || s[this.position] === "_")) { w += s[this.position]; this.position++; }
+      T.pos = this.position;
+      T.s("lex_word_loop", "É letra: acumula letras, dígitos e '_'. acumulado = \"" + w + "\".", { hl: [p, this.position] });
+      this.position = p;
+      if (w === "Println") {
+        T.s("lex_kw_chk", "Confere se \"" + w + "\" é palavra reservada. É: Println.", { hl: [p, p + w.length] });
+        this.tk("PRINT", w, p, p + w.length, "lex_print", "Palavra reservada: token PRINT (não é uma variável).");
+      } else if (r6 && R6_KW.hasOwnProperty(w)) {
+        T.s("lex_kw_chk", "Confere se \"" + w + "\" é palavra reservada. É: " + w + ".", { hl: [p, p + w.length] });
+        var tp = R6_KW[w];
+        this.tk(tp, w, p, p + w.length, { IF: "lex_if", WHILE: "lex_while", ELSE: "lex_else", READ: "lex_read" }[tp],
+          tp === "WHILE" ? "\"for\" vira o token WHILE: em Go o for faz o papel do while." : "Palavra reservada: token " + tp + ".");
+      } else {
+        T.s("lex_kw_chk", "Confere se \"" + w + "\" é palavra reservada. Não é.", { hl: [p, p + w.length] });
+        this.tk("IDEN", w, p, p + w.length, "lex_iden", "Não é reservada: é um identificador, token IDEN(" + w + ").", w);
+      }
+    } else {
+      T.erro("lex_err", "java.lang.RuntimeException", "[Lexer] Invalid Symbol " + c,
+        "'" + mostra(c) + "' não começa nenhum token da linguagem" + (c === "_" ? " (identificador não pode começar com '_')" : "") + ". Erro léxico.");
+    }
+    T.leave();
+    T.fase = fase;
+  };
+  LexerV2.prototype.tk = function (tipo, txt, a, b, k, narr, v) {
+    var T = this.T;
+    var t = T.tok(tipo, txt, v, a, b);
+    this.next = { tipo: tipo, valor: tipo === "NUMERO" ? v : 0, nome: tipo === "IDEN" ? v : null, a: a, b: b, idx: T.cur };
+    this.position = b;
+    T.pos = b;
+    T.s(k, narr || ("Achou '" + txt + "': next = " + tipo + "."), { hl: [a, b] });
+    return t;
+  };
+  function nomeTok2(t) {
+    if (t.tipo === "NUMERO") return "NUMERO(" + t.valor + ")";
+    if (t.tipo === "IDEN") return "IDEN(" + t.nome + ")";
+    return t.tipo;
+  }
+
+  // PrePro.filter com mapa de posições (código limpo -> arquivo original)
+  function prePro(conteudo) {
+    var re = /\/\/[^\n\r\u0085\u2028\u2029]*/g, limpo = "", map = [], ultimo = 0, m, n = 0;
+    while ((m = re.exec(conteudo))) {
+      for (var i = ultimo; i < m.index; i++) { limpo += conteudo[i]; map.push(i); }
+      ultimo = m.index + m[0].length;
+      n++;
+    }
+    for (var j = ultimo; j < conteudo.length; j++) { limpo += conteudo[j]; map.push(j); }
+    map.push(conteudo.length);
+    return { limpo: limpo, map: map, n: n };
+  }
+
+  // Scanner(System.in).nextLine(): quebra a entrada em linhas
+  function linhasStdin(txt) {
+    if (!txt) return [];
+    var ls = txt.split(/\r\n|[\n\r\u2028\u2029\u0085]/);
+    if (/(\r\n|[\n\r\u2028\u2029\u0085])$/.test(txt)) ls.pop();
+    return ls;
+  }
+
+  function runV2(T, src, r6, stdin) {
+    var entrada = linhasStdin(stdin);
+    T.enter("Main.main");
+    T.s("main_read", "Lê o arquivo inteiro para a String conteudo.", { hl: [0, src.length] });
+    var conteudo = src + "\n";
+    T.s("main_nl", "Acrescenta um \"\\n\" no fim, para a última linha também ter um END.", { hl: [src.length, src.length + 1] });
+    T.s("main_prepro", "Chama PrePro.filter(conteudo) antes do Lexer existir.", { hl: null });
+    T.fase = "prepro";
+    T.enter("PrePro.filter");
+    var pp = prePro(conteudo);
+    T.s("prepro", pp.n ? "replaceAll(\"//.*\", \"\") apaga " + pp.n + " comentário(s). O '.' não atravessa '\\n', então as quebras de linha ficam."
+      : "Não há comentários: o código sai igual.", { hl: null });
+    T.leave();
+    T.map = pp.map;
+    var source = pp.limpo;
+    var lexer = null;
+    T.fase = "main";
+
+    function next() { return lexer.next; }
+    function hlNext() { return [next().a, next().b]; }
+    function consome(k, narr) { T.s(k, narr, { hl: hlNext() }); lexer.selectNext(); }
+    function pErr(k, msg, narr) { T.erro(k, "java.lang.RuntimeException", msg, narr); }
+    function ent(fn) { T.enter("Parser." + fn); T.fase = "parser"; }
+    function sai() { T.leave(); T.fase = "parser"; }
+
+    // ---------------- Parser ----------------
+    function parseFactor() {
+      ent("parseFactor");
+      var t = next(), a0 = t.a, no, filho;
+      T.s("pf_enter", "Entra em parseFactor(). Olha o token atual, " + nomeTok2(t) + ", para escolher o caminho do FACTOR.", { hl: hlNext() });
+      if (t.tipo === "NUMERO") {
+        T.s("pf_num_chk", "É NUMERO: caminho do número.", { hl: hlNext() });
+        no = T.node("IntVal", t.valor, [], t.a, t.b);
+        T.s("pf_num", "Cria IntVal(" + t.valor + "), uma folha.", { node: no.id, hl: hlNext() });
+        consome("pf_num_next", "Consome o número.");
+        sai(); return no;
+      }
+      if (t.tipo === "PLUS" || t.tipo === "MINUS" || (r6 && t.tipo === "NOT")) {
+        var op = t.tipo === "PLUS" ? "+" : t.tipo === "MINUS" ? "-" : "!";
+        var pre = t.tipo === "PLUS" ? "pf_plus" : t.tipo === "MINUS" ? "pf_minus" : "pf_not";
+        T.s(pre + "_chk", "É " + t.tipo + ": operador unário '" + op + "' seguido de outro FACTOR.", { hl: hlNext() });
+        consome(pre + "_next", "Consome o '" + op + "'.");
+        T.s(pre + "_call", "Chama parseFactor() de novo (recursão) para montar o operando.", { hl: hlNext() });
+        filho = parseFactor();
+        no = T.node("UnOp", op, [filho], a0, T.lastEnd);
+        T.s(pre + "_ret", "Cria UnOp(\"" + op + "\") com 1 filho e devolve.", { node: no.id, hl: [a0, T.lastEnd] });
+        sai(); return no;
+      }
+      if (t.tipo === "OPEN_PAR") {
+        T.s("pf_par_chk", "É '(': dentro vem uma expressão inteira.", { hl: hlNext() });
+        consome("pf_par_next", "Consome o '('.");
+        T.s("pf_par_call", "Chama " + (r6 ? "parseBoolExpression()" : "parseExpression()") + " para o que está entre parênteses.", { hl: hlNext() });
+        no = r6 ? parseBoolExpression() : parseExpression();
+        if (next().tipo !== "CLOSE_PAR") pErr("pf_par_err", "[Parser] Expected )", "Terminou a expressão de dentro, mas o token atual é " + nomeTok2(next()) + ", não ')'. Faltou fechar o parêntese.");
+        T.s("pf_par_close_chk", "O token atual é ')': o parêntese fecha certinho.", { hl: hlNext() });
+        consome("pf_par_close_next", "Consome o ')'.");
+        T.s("pf_par_ret", "Devolve o nó de dentro. Parêntese não vira nó.", { node: no.id, hl: null });
+        sai(); return no;
+      }
+      if (t.tipo === "IDEN") {
+        T.s("pf_iden_chk", "É IDEN: o USO de uma variável no meio da conta.", { hl: hlNext() });
+        no = T.node("Identifier", t.nome, [], t.a, t.b);
+        T.s("pf_iden", "Cria Identifier(\"" + t.nome + "\"). Ele guarda só o NOME: o valor só existe na hora do evaluate().", { node: no.id, hl: hlNext() });
+        consome("pf_iden_next", "Consome o identificador.");
+        sai(); return no;
+      }
+      if (r6 && t.tipo === "READ") {
+        T.s("pf_read_chk", "É READ (Scanln): leitura do terminal.", { hl: hlNext() });
+        consome("pf_read_next", "Consome o Scanln.");
+        if (next().tipo !== "OPEN_PAR") pErr("pf_read_open_err", "[Parser] Expected (", "Depois de Scanln tem que vir '('. Veio " + nomeTok2(next()) + ".");
+        consome("pf_read_open_next", "Consome o '('.");
+        if (next().tipo !== "CLOSE_PAR") pErr("pf_read_close_err", "[Parser] Expected )", "Scanln não recebe argumentos: depois do '(' tem que vir ')'. Veio " + nomeTok2(next()) + ".");
+        consome("pf_read_close_next", "Consome o ')'.");
+        no = T.node("Read", null, [], a0, T.lastEnd);
+        T.s("pf_read_ret", "Cria o nó Read, sem filhos. O número só vai ser lido no evaluate().", { node: no.id, hl: [a0, T.lastEnd] });
+        sai(); return no;
+      }
+      pErr("pf_err", "[Parser] Unexpected token in factor: " + t.tipo,
+        "Nenhum caminho do FACTOR começa com " + nomeTok2(t) + ". Era esperado número, variável, sinal" + (r6 ? ", '!', Scanln" : "") + " ou '('.");
+    }
+
+    function binLoop(pre, fn, sub, subNome, ops, rotulo) {
+      ent(fn);
+      var a0 = next().a;
+      T.s(pre + "_enter", "Entra em " + fn + "(): " + rotulo, { hl: hlNext() });
+      T.s(pre + "_first", "Chama " + subNome + "() para o primeiro operando.", { hl: hlNext() });
+      var no = sub();
+      while (ops.hasOwnProperty(next().tipo)) {
+        var op = ops[next().tipo];
+        T.s(pre + "_while", "O token atual é " + next().tipo + ": entra no laço.", { hl: hlNext() });
+        if (pre !== "pbt" && pre !== "pbe") T.s(pre + "_op", "Guarda o operador \"" + op + "\" antes de avançar.", { hl: hlNext() });
+        consome(pre + "_op_next", "Consome o '" + op + "'.");
+        T.s(pre + "_right", "Chama " + subNome + "() para o operando da direita.", { hl: hlNext() });
+        var dir = sub();
+        no = T.node("BinOp", op, [no, dir], a0, T.lastEnd);
+        T.s(pre + "_binop", "Cria BinOp(\"" + op + "\"): o nó que já tínhamos vira o filho da esquerda.", { node: no.id, hl: [a0, T.lastEnd] });
+      }
+      T.s(pre + "_ret", "O token atual (" + nomeTok2(next()) + ") não continua o laço: devolve o nó.", { node: no.id, hl: null });
+      sai();
+      return no;
+    }
+    function parseTerm() { return binLoop("pt", "parseTerm", parseFactor, "parseFactor", { MULT: "*", DIV: "/" }, "FACTOR, depois (* ou / FACTOR)*."); }
+    function parseExpression() { return binLoop("pe", "parseExpression", parseTerm, "parseTerm", { PLUS: "+", MINUS: "-" }, "TERM, depois (+ ou - TERM)*."); }
+    function parseRelExpression() { return binLoop("pr", "parseRelExpression", parseExpression, "parseExpression", { EQ: "==", GT: ">", LT: "<" }, "EXPRESSION, depois (== > < EXPRESSION)*."); }
+    function parseBoolTerm() { return binLoop("pbt", "parseBoolTerm", parseRelExpression, "parseRelExpression", { AND: "&&" }, "REL_EXPRESSION, depois (&& REL_EXPRESSION)*."); }
+    function parseBoolExpression() { return binLoop("pbe", "parseBoolExpression", parseBoolTerm, "parseBoolTerm", { OR: "||" }, "BOOL_TERM, depois (|| BOOL_TERM)*. É o degrau de menor precedência."); }
+    var expr = r6 ? parseBoolExpression : parseExpression;
+    var exprNome = r6 ? "parseBoolExpression" : "parseExpression";
+
+    function fimDeLinha(pre, no, oque) {
+      if (next().tipo !== "END") pErr(pre + "_end_err", "[Parser] Expected end of line",
+        oque + " terminou, mas o próximo token é " + nomeTok2(next()) + ". Cada statement tem que acabar num '\\n' (END).");
+      T.s(pre + "_end_chk", "O próximo token é END: " + oque.toLowerCase() + " acabou na linha certa.", { hl: hlNext() });
+      consome(pre + "_end_next", "Consome o END.");
+    }
+
+    function parseBlock() {
+      ent("parseBlock");
+      var a0 = next().a;
+      T.s("pb_enter", "Entra em parseBlock(): '{', statements, '}'.", { hl: hlNext() });
+      if (next().tipo !== "OPEN_BRA") pErr("pb_open_err", "[Parser] Expected {", "Um bloco tem que abrir com '{'. Veio " + nomeTok2(next()) + ".");
+      T.s("pb_open_chk", "O token é '{': abre o bloco.", { hl: hlNext() });
+      consome("pb_open_next", "Consome o '{'.");
+      var bloco = T.node("Block", null, [], a0, a0 + 1);
+      T.s("pb_block", "Cria um Block vazio para guardar os statements de dentro.", { node: bloco.id, hl: [a0, a0 + 1] });
+      while (next().tipo !== "CLOSE_BRA") {
+        T.s("pb_while", "O token atual (" + nomeTok2(next()) + ") não é '}': ainda tem statement dentro do bloco.", { hl: hlNext() });
+        if (next().tipo === "EOF") pErr("pb_eof_err", "[Parser] Expected }", "O arquivo acabou com o bloco ainda aberto: faltou o '}'.");
+        T.s("pb_stmt", "Chama parseStatement().", { hl: hlNext() });
+        var st = parseStatement();
+        T.link(bloco, st);
+        bloco.b = T.lastEnd;
+        T.s("pb_add", "Pendura o statement como filho do Block (agora com " + bloco.kids.length + ").", { node: bloco.id, hl: null });
+      }
+      consome("pb_close_next", "Achou o '}': consome e fecha o bloco.");
+      bloco.b = T.lastEnd; bloco.ca = T.conv([bloco.a, bloco.b]);
+      T.s("pb_ret", "Devolve o Block com " + bloco.kids.length + " filho(s).", { node: bloco.id, hl: [a0, T.lastEnd] });
+      sai();
+      return bloco;
+    }
+
+    function parseStatement() {
+      ent("parseStatement");
+      var t = next(), a0 = t.a, no;
+      T.s("ps_enter", "Entra em parseStatement(). O token atual, " + nomeTok2(t) + ", decide qual instrução é.", { hl: hlNext() });
+      if (t.tipo === "PRINT") {
+        T.s("ps_print_chk", "É PRINT: Println ( expressão ).", { hl: hlNext() });
+        consome("ps_print_next", "Consome o Println.");
+        if (next().tipo !== "OPEN_PAR") pErr("ps_print_open_err", "[Parser] Expected (", "Depois de Println tem que vir '('. Veio " + nomeTok2(next()) + ".");
+        consome("ps_print_open_next", "Consome o '('.");
+        T.s("ps_print_expr", "Chama " + exprNome + "() para o que vai ser impresso.", { hl: hlNext() });
+        var e = expr();
+        if (next().tipo !== "CLOSE_PAR") pErr("ps_print_close_err", "[Parser] Expected )", "A expressão do Println terminou, mas veio " + nomeTok2(next()) + " em vez de ')'.");
+        consome("ps_print_close_next", "Consome o ')'.");
+        no = T.node("Print", null, [e], a0, T.lastEnd);
+        T.s("ps_print_node", "Cria o nó Print com a expressão como único filho.", { node: no.id, hl: [a0, T.lastEnd] });
+        fimDeLinha("ps_print", no, "O Println");
+        T.s("ps_print_ret", "Devolve o nó Print.", { node: no.id, hl: null });
+        sai(); return no;
+      }
+      if (t.tipo === "IDEN") {
+        T.s("ps_iden_chk", "É IDEN no começo da linha: só pode ser uma atribuição.", { hl: hlNext() });
+        T.s("ps_iden_name", "Guarda o nome \"" + t.nome + "\" ANTES de avançar (depois o token some).", { hl: hlNext() });
+        var id = T.node("Identifier", t.nome, [], t.a, t.b);
+        T.s("ps_iden_node", "Cria Identifier(\"" + t.nome + "\"): vai ser o filho 0 do Assignment.", { node: id.id, hl: hlNext() });
+        consome("ps_iden_next", "Consome o identificador.");
+        if (next().tipo !== "ASSIGN") pErr("ps_assign_err", "[Parser] Expected =",
+          "Depois de \"" + t.nome + "\" no começo da linha era preciso '='. Veio " + nomeTok2(next()) + "." + (t.nome.toLowerCase() === "println" ? " (Println tem P maiúsculo!)" : ""));
+        T.s("ps_assign_chk", "Veio '=': atribuição confirmada.", { hl: hlNext() });
+        consome("ps_assign_next", "Consome o '='.");
+        T.s("ps_asg_expr", "Chama " + exprNome + "() para o lado direito.", { hl: hlNext() });
+        var dir = expr();
+        no = T.node("Assignment", null, [id, dir], a0, T.lastEnd);
+        T.s("ps_asg_node", "Cria Assignment com 2 filhos: [0] o nome, [1] a expressão.", { node: no.id, hl: [a0, T.lastEnd] });
+        fimDeLinha("ps_asg", no, "A atribuição");
+        T.s("ps_asg_ret", "Devolve o Assignment.", { node: no.id, hl: null });
+        sai(); return no;
+      }
+      if (r6 && t.tipo === "IF") {
+        T.s("ps_if_chk", "É IF: if condição { ... } [else { ... }].", { hl: hlNext() });
+        consome("ps_if_next", "Consome o 'if'.");
+        T.s("ps_if_cond", "Chama parseBoolExpression() para a condição (sem parênteses obrigatórios, como no Go).", { hl: hlNext() });
+        var cond = parseBoolExpression();
+        T.s("ps_if_then", "Chama parseBlock() para o bloco do 'então'.", { hl: hlNext() });
+        var entao = parseBlock(), senao = null;
+        if (next().tipo === "ELSE") {
+          T.s("ps_else_chk", "Logo depois do '}' veio 'else'.", { hl: hlNext() });
+          consome("ps_else_next", "Consome o 'else'.");
+          T.s("ps_else_block", "Chama parseBlock() para o bloco do else.", { hl: hlNext() });
+          senao = parseBlock();
+        }
+        no = T.node("If", null, [cond, entao, senao], a0, T.lastEnd);
+        T.s("ps_if_node", "Cria o nó If com " + no.kids.length + " filhos: condição, então" + (senao ? ", senão." : "."), { node: no.id, hl: [a0, T.lastEnd] });
+        fimDeLinha("ps_if", no, "O if");
+        T.s("ps_if_ret", "Devolve o If.", { node: no.id, hl: null });
+        sai(); return no;
+      }
+      if (r6 && t.tipo === "WHILE") {
+        T.s("ps_while_chk", "É WHILE (escrito 'for'): for condição { ... }.", { hl: hlNext() });
+        consome("ps_while_next", "Consome o 'for'.");
+        T.s("ps_while_cond", "Chama parseBoolExpression() para a condição do laço.", { hl: hlNext() });
+        var c2 = parseBoolExpression();
+        T.s("ps_while_body", "Chama parseBlock() para o corpo do laço.", { hl: hlNext() });
+        var corpo = parseBlock();
+        no = T.node("While", null, [c2, corpo], a0, T.lastEnd);
+        T.s("ps_while_node", "Cria o nó While com 2 filhos: condição e corpo.", { node: no.id, hl: [a0, T.lastEnd] });
+        fimDeLinha("ps_while", no, "O for");
+        T.s("ps_while_ret", "Devolve o While.", { node: no.id, hl: null });
+        sai(); return no;
+      }
+      if (t.tipo === "END") {
+        T.s("ps_empty_chk", "É END logo de cara: linha vazia.", { hl: hlNext() });
+        consome("ps_empty_next", "Consome o '\\n'.");
+        no = T.node("NoOp", null, [], t.a, t.b);
+        T.s("ps_noop", "Linha vazia vira NoOp, um nó que não faz nada.", { node: no.id, hl: [t.a, t.b] });
+        sai(); return no;
+      }
+      pErr("ps_err", "[Parser] Unexpected token in statement: " + t.tipo,
+        "Nenhuma instrução começa com " + nomeTok2(t) + ". Uma linha pode começar com Println, uma variável" + (r6 ? ", if, for" : "") + " ou ser vazia." +
+        (t.tipo === "NUMERO" ? " (Uma conta solta, sem atribuir a ninguém, não é instrução.)" : "") +
+        (t.tipo === "CLOSE_BRA" ? " (Tem um '}' sobrando.)" : "") +
+        (t.tipo === "ELSE" ? " (O else tem que vir na MESMA linha do '}' do if: '} else {'.)" : ""));
+    }
+
+    function parseProgram() {
+      ent("parseProgram");
+      T.s("pp_enter", "Entra em parseProgram(): o programa é uma sequência de statements até o EOF.", { hl: hlNext() });
+      var bloco = T.node("Block", null, [], 0, source.length);
+      T.s("pp_block", "Cria o Block raiz. Cada linha do arquivo vai virar um filho dele.", { node: bloco.id, hl: null });
+      while (next().tipo !== "EOF") {
+        T.s("pp_while", "Ainda não é EOF (o token atual é " + nomeTok2(next()) + "): lê mais um statement.", { hl: hlNext() });
+        T.s("pp_stmt", "Chama parseStatement().", { hl: hlNext() });
+        var st = parseStatement();
+        T.link(bloco, st);
+        T.s("pp_add", "Pendura o statement no Block raiz (agora com " + bloco.kids.length + " filho(s)).", { node: bloco.id, hl: null });
+      }
+      T.s("pp_ret", "Chegou no EOF. Devolve o Block com " + bloco.kids.length + " statement(s).", { node: bloco.id, hl: null });
+      sai();
+      return bloco;
+    }
+
+    function run() {
+      T.enter("Parser.run");
+      T.fase = "parser";
+      T.s("run_enter", "Entra em Parser.run() com o código já sem comentários.", { hl: null });
+      lexer = new LexerV2(T, source, r6);
+      T.s("run_lexer", "Cria o Lexer. position = 0 e ainda não há token nenhum.", { hl: [0, 0] });
+      T.s("run_first", "Pede o primeiro token, para o Parser ter o que olhar.", { hl: [0, 0] });
+      lexer.selectNext();
+      T.s("run_prog", "Chama parseProgram(), o novo ponto de entrada.", { hl: hlNext() });
+      var raiz = parseProgram();
+      T.s("run_ret", "Análise sintática completa. Devolve a raiz da AST para a main().", { node: raiz.id, hl: null });
+      T.leave();
+      return raiz;
+    }
+
+    // ---------------- evaluate ----------------
+    function evaluate(n) {
+      T.enter(n.cls + ".evaluate", null, n.id);
+      T.fase = "eval";
+      var o = { node: n.id, hl: [n.a, n.b] }, r = 0, e, d, x, k = n.kids;
+      function filho(i) { return T.nodes[k[i].id]; }
+      switch (n.cls) {
+        case "IntVal":
+          r = n.value; T.val(n, r);
+          T.s("ev_int", "IntVal devolve o número que guarda: " + r + ".", o);
+          break;
+        case "Identifier":
+          T.s("ev_iden", "Identifier pede à SymbolTable o valor ATUAL de \"" + n.value + "\".", o);
+          r = stGet(n.value);
+          T.val(n, r);
+          break;
+        case "UnOp":
+          T.s("ev_un_child", "UnOp(\"" + n.value + "\") avalia primeiro o único filho.", o);
+          x = evaluate(filho(0)); T.loc("resultado", x);
+          if (n.value === "-") { r = I.neg(x); T.val(n, r); T.s("ev_un_neg", "Troca o sinal: -(" + x + ") = " + r + ".", o); }
+          else if (n.value === "!") { r = x === 0 ? 1 : 0; T.val(n, r); T.s("ev_un_not", "Negação lógica: !" + x + " = " + r + " (0 é falso, o resto é verdadeiro).", o); }
+          else { r = x; T.val(n, r); T.s("ev_un_pos", "+ unário não muda nada: " + r + ".", o); }
+          break;
+        case "BinOp":
+          T.s("ev_bin_l", "BinOp(\"" + n.value + "\") avalia primeiro o filho da esquerda.", o);
+          e = evaluate(filho(0)); T.loc("esquerdo", e);
+          T.s("ev_bin_r", "esquerdo = " + e + ". Agora avalia o filho da direita" + (n.value === "&&" || n.value === "||" ? " (sempre: não há curto-circuito)." : "."), o);
+          d = evaluate(filho(1)); T.loc("direito", d);
+          switch (n.value) {
+            case "+": r = I.add(e, d); T.val(n, r); T.s("ev_bin_plus", e + " + " + d + " = " + r + ".", o); break;
+            case "-": r = I.sub(e, d); T.val(n, r); T.s("ev_bin_minus", e + " - " + d + " = " + r + ".", o); break;
+            case "*": r = I.mul(e, d); T.val(n, r); T.s("ev_bin_mult", e + " × " + d + " = " + r + ".", o); break;
+            case "/":
+              if (d === 0) T.erro("ev_bin_div_err", "java.lang.RuntimeException", "[Semantic] Division by zero", "O divisor avaliou para 0. A escrita estava certa; o valor é que não faz sentido: erro semântico.");
+              T.s("ev_bin_div_chk", "Confere o divisor: " + d + " não é zero.", o);
+              r = I.div(e, d); T.val(n, r); T.s("ev_bin_div", e + " / " + d + " = " + r + " (divisão inteira).", o); break;
+            case "==": r = e === d ? 1 : 0; T.val(n, r); T.s("ev_bin_eq", e + " == " + d + " → " + r + ".", o); break;
+            case ">": r = e > d ? 1 : 0; T.val(n, r); T.s("ev_bin_gt", e + " > " + d + " → " + r + ".", o); break;
+            case "<": r = e < d ? 1 : 0; T.val(n, r); T.s("ev_bin_lt", e + " < " + d + " → " + r + ".", o); break;
+            case "&&": r = e !== 0 && d !== 0 ? 1 : 0; T.val(n, r); T.s("ev_bin_and", e + " && " + d + " → " + r + ".", o); break;
+            case "||": r = e !== 0 || d !== 0 ? 1 : 0; T.val(n, r); T.s("ev_bin_or", e + " || " + d + " → " + r + ".", o); break;
+          }
+          break;
+        case "Print":
+          T.s("ev_print_child", "Print avalia o filho para saber o que imprimir.", o);
+          x = evaluate(filho(0)); T.loc("resultado", x);
+          T.out.push(String(x));
+          T.s("ev_print_out", "System.out.println(" + x + "): aparece na saída.", o);
+          break;
+        case "Assignment":
+          T.s("ev_asg_child", "Assignment avalia SÓ o filho [1], o lado direito.", o);
+          x = evaluate(filho(1)); T.loc("valor", x);
+          T.s("ev_asg_name", "Pega o nome direto do value do filho [0]: \"" + filho(0).value + "\". Não chama evaluate() nele: ninguém quer o valor antigo.", o);
+          T.s("ev_asg_set", "Chama st.setValue(\"" + filho(0).value + "\", " + x + ").", o);
+          stSet(filho(0).value, x);
+          break;
+        case "Block":
+          for (var i = 0; i < k.length; i++) {
+            T.loc("filho", i);
+            T.s("ev_block_child", "Block executa o filho " + (i + 1) + " de " + k.length + " (" + filho(i).cls + ").", o);
+            evaluate(filho(i));
+          }
+          if (!k.length) T.s("ev_block_for", "Block vazio: não há o que executar.", o);
+          break;
+        case "NoOp":
+          T.s("ev_noop", "NoOp: linha vazia, não faz nada.", o);
+          break;
+        case "If":
+          T.s("ev_if_cond", "If avalia a condição (filho 0).", o);
+          x = evaluate(filho(0)); T.loc("condicao", x);
+          if (x !== 0) {
+            T.s("ev_if_then", "A condição deu " + x + " (diferente de 0): executa o bloco do então.", o);
+            evaluate(filho(1));
+          } else if (k.length > 2) {
+            T.s("ev_if_else", "A condição deu 0: executa o bloco do else.", o);
+            evaluate(filho(2));
+          } else {
+            T.s("ev_if_has_else", "A condição deu 0 e não tem else: não faz nada.", o);
+          }
+          T.s("ev_if_end", "Fim do If.", o);
+          break;
+        case "While":
+          var volta = 0;
+          for (;;) {
+            T.loc("volta", volta);
+            T.s("ev_while_cond", "While avalia a condição de novo" + (volta ? " (volta " + (volta + 1) + ")." : "."), o);
+            x = evaluate(filho(0)); T.loc("condicao", x);
+            if (x === 0) break;
+            volta++; T.loc("volta", volta);
+            T.s("ev_while_body", "A condição deu " + x + ": executa o corpo (volta " + volta + ").", o);
+            evaluate(filho(1));
+          }
+          T.s("ev_while_end", "A condição deu 0: sai do laço depois de " + volta + " volta(s).", o);
+          break;
+        case "Read":
+          T.enter("Scanner.nextLine");
+          if (T.lidos >= entrada.length) T.erro("ev_read_eof", "java.lang.RuntimeException", "[Semantic] Scanln: no input available", "O programa pediu um Scanln(), mas a entrada (stdin) já acabou. Preencha a caixa de entrada.");
+          T.s("ev_read_chk", "Tem linha disponível na entrada.", o);
+          var linha = javaTrim(entrada[T.lidos]);
+          T.lidos++;
+          T.s("ev_read_line", "Lê a linha \"" + linha + "\" do terminal.", o);
+          T.leave();
+          var ok = /^[+-]?[0-9]+$/.test(linha), num = ok ? Number(linha) : NaN;
+          if (!ok || num > 2147483647 || num < -2147483648) T.erro("ev_read_err", "java.lang.RuntimeException", "[Semantic] Scanln: invalid integer " + linha, "\"" + linha + "\" não é um inteiro válido.");
+          r = num; T.val(n, r);
+          T.s("ev_read_ret", "Converte e devolve " + r + ".", o);
+          break;
+      }
+      T.leave();
+      return r;
+    }
+    function stGet(nome) {
+      T.enter("SymbolTable.getValue", { nome: nome });
+      T.fase = "eval";
+      if (!T.st || !Object.prototype.hasOwnProperty.call(T.st, nome)) {
+        T.erro("st_get_err", "java.lang.RuntimeException", "[Semantic] Variable " + nome + " not declared",
+          "\"" + nome + "\" nunca recebeu valor antes desta linha, então não está na tabela. O Parser não tinha como saber disso: erro semântico.");
+      }
+      var v = T.st[nome];
+      T.s("st_get_ret", "\"" + nome + "\" está na tabela: devolve " + v + ".", { stAlt: nome });
+      T.leave();
+      return v;
+    }
+    function stSet(nome, v) {
+      T.enter("SymbolTable.setValue", { nome: nome, valor: v });
+      var existe = T.st && Object.prototype.hasOwnProperty.call(T.st, nome);
+      T.stSet(nome, v);
+      if (existe) T.s("st_set_upd", "\"" + nome + "\" já existia: atualiza o value do Variable para " + v + ".", { stAlt: nome });
+      else T.s("st_set_new", "\"" + nome + "\" é nova: cria new Variable(" + v + ") e põe na tabela.", { stAlt: nome });
+      T.leave();
+    }
+
+    T.fase = "main";
+    T.s("main_parse", "Chama Parser.run(codigoLimpo): Lexer e Parser trabalham juntos, token a token.", { hl: null });
+    var raiz = run();
+    T.fase = "main";
+    T.s("main_st", "Cria a SymbolTable, vazia. Ela só existe agora, na execução, e não durante o Parser.", { hl: null });
+    T.st = {};
+    T.s("main_eval", "Chama raiz.evaluate(st): o Block raiz executa cada statement em ordem.", { node: raiz.id, hl: null });
+    evaluate(raiz);
+    T.fase = "fim";
+    T.s("main_eval", "Fim do programa.", { hl: null });
+    T.leave();
+  }
+
+  // ------------------------------------------------------------ fachada ---
+  var VERSOES = {
+    "v0.0": { roteiro: 1, entrada: "args", rodar: function (T, src) { runV00(T, src); } },
+    "v1.0": { roteiro: 2, entrada: "args", rodar: function (T, src) { runV1(T, src, "1.0"); } },
+    "v1.1": { roteiro: 3, entrada: "args", rodar: function (T, src) { runV1(T, src, "1.1"); } },
+    "v1.2": { roteiro: 4, entrada: "args", rodar: function (T, src) { runV1(T, src, "1.2"); } },
+    "v2.0": { roteiro: 5, entrada: "arquivo", rodar: function (T, src, o) { runV2(T, src, false, o.stdin); } },
+    "v2.1": { roteiro: 6, entrada: "arquivo", rodar: function (T, src, o) { runV2(T, src, true, o.stdin); } }
+  };
+
+  function executar(versao, src, o) {
+    o = o || {};
+    var T = new Trace(o), V = VERSOES[versao], res = { versao: versao, trace: T, saida: T.out, erro: null, limite: false };
+    try { V.rodar(T, src, o); }
+    catch (e) {
+      if (e instanceof JavaError) res.erro = e;
+      else if (e instanceof LimiteErro) {
+        res.limite = true;
+        T.steps.push({ k: null, narr: "Parei depois de " + e.n + " passos. Provavelmente é um laço infinito: a condição do for nunca chega em 0.", fase: "erro", hl: null, pos: T.pos, cur: T.cur, nt: T.tokens.length, fr: [], st: T.st, nout: T.out.length, node: null, erro: { cls: "", msg: "Limite de passos", origem: "Limite" }, lidos: T.lidos });
+      } else throw e;
+    }
+    return res;
+  }
+
+  var Motor = { executar: executar, VERSOES: VERSOES, JavaError: JavaError, prePro: prePro };
+  if (typeof module !== "undefined" && module.exports) module.exports = Motor;
+  else G.Motor = Motor;
+})(typeof window !== "undefined" ? window : this);
+
+</script>
+<script>window.R6_FONTE = {"src":"import java.nio.file.Files;\nimport java.nio.file.Paths;\nimport java.util.ArrayList;\nimport java.util.HashMap;\nimport java.util.Scanner;\n\n// ============================================================================\n// REFERÊNCIA DO ROTEIRO 6 (v2.1) usada pelo depurador do site.\n// É o main.java do Roteiro 5 (v2.0) com os acréscimos do Roteiro 6 marcados\n// com \"R6:\". Serve pra estudar - a sua versão é você quem escreve!\n// Os comentários \"//#chave\" no fim das linhas marcam a linha que o\n// depurador destaca; o site remove esses marcadores antes de mostrar.\n// ============================================================================\n\npublic class Main {\n    public static void main(String[] args) throws Exception {\n        String conteudo = new String(Files.readAllBytes(Paths.get(args[0])));\n        conteudo = conteudo + \"\\n\";\n\n        String codigoLimpo = PrePro.filter(conteudo);\n\n        Node raiz = Parser.run(codigoLimpo);\n\n        SymbolTable st = new SymbolTable();\n        raiz.evaluate(st);\n    }\n}\n\n// ===================== Pré-processamento =====================\nclass PrePro {\n    static String filter(String codigo) {\n        return codigo.replaceAll(\"//.*\", \"\");\n    }\n}\n\n// ===================== Tabela de Símbolos =====================\nclass Variable {\n    int value;\n\n    Variable(int value) {\n        this.value = value;\n    }\n}\n\nclass SymbolTable {\n    private HashMap<String, Variable> table = new HashMap<String, Variable>();\n\n    HashMap<String, Variable> getTable() {\n        return table;\n    }\n\n    void setTable(HashMap<String, Variable> table) {\n        this.table = table;\n    }\n\n    int getValue(String nome) {\n        if (!table.containsKey(nome)) {\n            throw new RuntimeException(\"[Semantic] Variable \" + nome + \" not declared\");\n        }\n        return table.get(nome).value;\n    }\n\n    void setValue(String nome, int valor) {\n        if (table.containsKey(nome)) {\n            table.get(nome).value = valor;\n        } else {\n            table.put(nome, new Variable(valor));\n        }\n    }\n}\n\n// ===================== Tokens =====================\n// R6: 12 tipos novos - operadores booleanos (AND, OR, NOT), relacionais\n// (EQ, GT, LT), palavras reservadas (IF, WHILE, ELSE, READ) e chaves\nenum TipoToken {\n    NUMERO, PLUS, MINUS, MULT, DIV, OPEN_PAR, CLOSE_PAR,\n    ASSIGN, END, PRINT, IDEN, EOF,\n    AND, OR, NOT, EQ, GT, LT,\n    IF, WHILE, ELSE, READ,\n    OPEN_BRA, CLOSE_BRA\n}\n\nclass Token {\n    TipoToken tipo;\n    int valor;\n    String nome;\n\n    Token(TipoToken tipo, int valor) {\n        this.tipo = tipo;\n        this.valor = valor;\n    }\n\n    Token(TipoToken tipo, String nome) {\n        this.tipo = tipo;\n        this.nome = nome;\n    }\n}\n\n// ===================== Lexer =====================\nclass Lexer {\n    String source;\n    int position;\n    Token next;\n\n    Lexer(String source) {\n        this.source = source;\n        this.position = 0;\n    }\n\n    void selectNext() {\n        while (position < source.length()\n                && Character.isWhitespace(source.charAt(position))\n                && source.charAt(position) != '\\n') {\n            position++;\n        }\n\n        if (position >= source.length()) {\n            next = new Token(TipoToken.EOF, 0);\n\n        } else if (source.charAt(position) == '\\n') {\n            next = new Token(TipoToken.END, 0);\n            position++;\n\n        } else if (source.charAt(position) == '+') {\n            next = new Token(TipoToken.PLUS, 0);\n            position++;\n\n        } else if (source.charAt(position) == '-') {\n            next = new Token(TipoToken.MINUS, 0);\n            position++;\n\n        } else if (source.charAt(position) == '*') {\n            next = new Token(TipoToken.MULT, 0);\n            position++;\n\n        } else if (source.charAt(position) == '/') {\n            next = new Token(TipoToken.DIV, 0);\n            position++;\n\n        } else if (source.charAt(position) == '(') {\n            next = new Token(TipoToken.OPEN_PAR, 0);\n            position++;\n\n        } else if (source.charAt(position) == ')') {\n            next = new Token(TipoToken.CLOSE_PAR, 0);\n            position++;\n\n        } else if (source.charAt(position) == '=') {\n            // R6: olha UM caractere à frente - \"==\" é comparação,\n            // \"=\" sozinho continua sendo atribuição\n            if (position + 1 < source.length() && source.charAt(position + 1) == '=') {\n                next = new Token(TipoToken.EQ, 0);\n                position += 2;\n            } else {\n                next = new Token(TipoToken.ASSIGN, 0);\n                position++;\n            }\n\n        } else if (source.charAt(position) == '&') {\n            // R6: \"&&\" é UM token - um '&' sozinho não existe na linguagem\n            if (position + 1 < source.length() && source.charAt(position + 1) == '&') {\n                next = new Token(TipoToken.AND, 0);\n                position += 2;\n            } else {\n                throw new RuntimeException(\"[Lexer] Invalid Symbol &\");\n            }\n\n        } else if (source.charAt(position) == '|') {\n            // R6: mesma ideia pro \"||\"\n            if (position + 1 < source.length() && source.charAt(position + 1) == '|') {\n                next = new Token(TipoToken.OR, 0);\n                position += 2;\n            } else {\n                throw new RuntimeException(\"[Lexer] Invalid Symbol |\");\n            }\n\n        } else if (source.charAt(position) == '!') {\n            next = new Token(TipoToken.NOT, 0);\n            position++;\n\n        } else if (source.charAt(position) == '>') {\n            next = new Token(TipoToken.GT, 0);\n            position++;\n\n        } else if (source.charAt(position) == '<') {\n            next = new Token(TipoToken.LT, 0);\n            position++;\n\n        } else if (source.charAt(position) == '{') {\n            next = new Token(TipoToken.OPEN_BRA, 0);\n            position++;\n\n        } else if (source.charAt(position) == '}') {\n            next = new Token(TipoToken.CLOSE_BRA, 0);\n            position++;\n\n        } else if (Character.isDigit(source.charAt(position))) {\n            String acumulado = \"\";\n            while (position < source.length() && Character.isDigit(source.charAt(position))) {\n                acumulado += source.charAt(position);\n                position++;\n            }\n            next = new Token(TipoToken.NUMERO, Integer.parseInt(acumulado));\n\n        } else if (Character.isLetter(source.charAt(position))) {\n            String acumulado = \"\";\n            while (position < source.length()\n                    && (Character.isLetterOrDigit(source.charAt(position)) || source.charAt(position) == '_')) {\n                acumulado += source.charAt(position);\n                position++;\n            }\n            // R6: mais palavras reservadas na mesma \"peneira\" do Println\n            if (acumulado.equals(\"Println\")) {\n                next = new Token(TipoToken.PRINT, 0);\n            } else if (acumulado.equals(\"if\")) {\n                next = new Token(TipoToken.IF, 0);\n            } else if (acumulado.equals(\"for\")) {\n                // em Go, \"for\" faz o papel do while - por isso o token é WHILE\n                next = new Token(TipoToken.WHILE, 0);\n            } else if (acumulado.equals(\"else\")) {\n                next = new Token(TipoToken.ELSE, 0);\n            } else if (acumulado.equals(\"Scanln\")) {\n                next = new Token(TipoToken.READ, 0);\n            } else {\n                next = new Token(TipoToken.IDEN, acumulado);\n            }\n\n        } else {\n            throw new RuntimeException(\"[Lexer] Invalid Symbol \" + source.charAt(position));\n        }\n    }\n}\n\n// ===================== AST =====================\nabstract class Node {\n    Object value;\n    ArrayList<Node> children = new ArrayList<Node>();\n\n    abstract int evaluate(SymbolTable st);\n}\n\nclass IntVal extends Node {\n    IntVal(int valor) {\n        this.value = valor;\n    }\n\n    int evaluate(SymbolTable st) {\n        return (Integer) value;\n    }\n}\n\nclass UnOp extends Node {\n    UnOp(String operador, Node operando) {\n        this.value = operador;\n        this.children.add(operando);\n    }\n\n    int evaluate(SymbolTable st) {\n        int resultado = children.get(0).evaluate(st);\n        if (value.equals(\"-\")) {\n            return -resultado;\n        } else if (value.equals(\"!\")) {\n            // R6: não existe booleano de verdade - 0 é falso, qualquer outro é verdadeiro\n            return (resultado == 0) ? 1 : 0;\n        } else {\n            return resultado;\n        }\n    }\n}\n\nclass BinOp extends Node {\n    BinOp(String operador, Node esquerdo, Node direito) {\n        this.value = operador;\n        this.children.add(esquerdo);\n        this.children.add(direito);\n    }\n\n    int evaluate(SymbolTable st) {\n        int esquerdo = children.get(0).evaluate(st);\n        int direito = children.get(1).evaluate(st);\n\n        if (value.equals(\"+\")) {\n            return esquerdo + direito;\n        } else if (value.equals(\"-\")) {\n            return esquerdo - direito;\n        } else if (value.equals(\"*\")) {\n            return esquerdo * direito;\n        } else if (value.equals(\"/\")) {\n            if (direito == 0) {\n                throw new RuntimeException(\"[Semantic] Division by zero\");\n            }\n            return esquerdo / direito;\n        } else if (value.equals(\"==\")) {\n            // R6: relacionais devolvem 1 (verdadeiro) ou 0 (falso)\n            return (esquerdo == direito) ? 1 : 0;\n        } else if (value.equals(\">\")) {\n            return (esquerdo > direito) ? 1 : 0;\n        } else if (value.equals(\"<\")) {\n            return (esquerdo < direito) ? 1 : 0;\n        } else if (value.equals(\"&&\")) {\n            // R6: repara que os DOIS filhos já foram avaliados lá em cima -\n            // aqui não tem curto-circuito como no && do Java\n            return (esquerdo != 0 && direito != 0) ? 1 : 0;\n        } else if (value.equals(\"||\")) {\n            return (esquerdo != 0 || direito != 0) ? 1 : 0;\n        } else {\n            throw new RuntimeException(\"[Semantic] Invalid operator \" + value);\n        }\n    }\n}\n\nclass Identifier extends Node {\n    Identifier(String nome) {\n        this.value = nome;\n    }\n\n    int evaluate(SymbolTable st) {\n        return st.getValue((String) value);\n    }\n}\n\nclass Print extends Node {\n    Print(Node expressao) {\n        this.children.add(expressao);\n    }\n\n    int evaluate(SymbolTable st) {\n        int resultado = children.get(0).evaluate(st);\n        System.out.println(resultado);\n        return 0;\n    }\n}\n\nclass Assignment extends Node {\n    Assignment(Node identificador, Node expressao) {\n        this.children.add(identificador);\n        this.children.add(expressao);\n    }\n\n    int evaluate(SymbolTable st) {\n        int valor = children.get(1).evaluate(st);\n        String nome = (String) children.get(0).value;\n        st.setValue(nome, valor);\n        return 0;\n    }\n}\n\nclass Block extends Node {\n    int evaluate(SymbolTable st) {\n        for (Node filho : children) {\n            filho.evaluate(st);\n        }\n        return 0;\n    }\n}\n\nclass NoOp extends Node {\n    int evaluate(SymbolTable st) {\n        return 0;\n    }\n}\n\n// R6: If tem 2 filhos (condição, bloco do \"então\") ou 3 (+ bloco do else)\nclass If extends Node {\n    If(Node condicao, Node entao, Node senao) {\n        this.children.add(condicao);\n        this.children.add(entao);\n        if (senao != null) {\n            this.children.add(senao);\n        }\n    }\n\n    int evaluate(SymbolTable st) {\n        if (children.get(0).evaluate(st) != 0) {\n            children.get(1).evaluate(st);\n        } else if (children.size() > 2) {\n            children.get(2).evaluate(st);\n        }\n        return 0;\n    }\n}\n\n// R6: While tem sempre 2 filhos - a condição é REAVALIADA a cada volta\nclass While extends Node {\n    While(Node condicao, Node corpo) {\n        this.children.add(condicao);\n        this.children.add(corpo);\n    }\n\n    int evaluate(SymbolTable st) {\n        while (children.get(0).evaluate(st) != 0) {\n            children.get(1).evaluate(st);\n        }\n        return 0;\n    }\n}\n\n// R6: Read não tem filhos - o valor vem de fora do programa (do terminal)\nclass Read extends Node {\n    // UM Scanner só pro programa inteiro: se cada Scanln criasse o seu,\n    // o primeiro poderia \"engolir\" no buffer linhas que eram do segundo\n    static Scanner scanner = new Scanner(System.in);\n\n    int evaluate(SymbolTable st) {\n        if (!scanner.hasNextLine()) {\n            throw new RuntimeException(\"[Semantic] Scanln: no input available\");\n        }\n        String linha = scanner.nextLine().trim();\n        try {\n            return Integer.parseInt(linha);\n        } catch (NumberFormatException e) {\n            throw new RuntimeException(\"[Semantic] Scanln: invalid integer \" + linha);\n        }\n    }\n}\n\n// ===================== Parser =====================\nclass Parser {\n    static Lexer lexer;\n\n    static Node parseFactor() {\n        if (lexer.next.tipo == TipoToken.NUMERO) {\n            Node node = new IntVal(lexer.next.valor);\n            lexer.selectNext();\n            return node;\n\n        } else if (lexer.next.tipo == TipoToken.PLUS) {\n            lexer.selectNext();\n            Node filho = parseFactor();\n            return new UnOp(\"+\", filho);\n\n        } else if (lexer.next.tipo == TipoToken.MINUS) {\n            lexer.selectNext();\n            Node filho = parseFactor();\n            return new UnOp(\"-\", filho);\n\n        } else if (lexer.next.tipo == TipoToken.NOT) {\n            // R6: \"!\" é unário, igualzinho ao \"-\", só muda o operador\n            lexer.selectNext();\n            Node filho = parseFactor();\n            return new UnOp(\"!\", filho);\n\n        } else if (lexer.next.tipo == TipoToken.OPEN_PAR) {\n            lexer.selectNext();\n            // R6: dentro do parênteses agora cabe uma expressão BOOLEANA inteira\n            Node node = parseBoolExpression();\n            if (lexer.next.tipo != TipoToken.CLOSE_PAR) {\n                throw new RuntimeException(\"[Parser] Expected )\");\n            }\n            lexer.selectNext();\n            return node;\n\n        } else if (lexer.next.tipo == TipoToken.IDEN) {\n            Node node = new Identifier(lexer.next.nome);\n            lexer.selectNext();\n            return node;\n\n        } else if (lexer.next.tipo == TipoToken.READ) {\n            // R6: Scanln ( ) - é um FACTOR porque devolve um valor, dá pra\n            // usar no meio de uma conta: x = Scanln() + 1\n            lexer.selectNext();\n            if (lexer.next.tipo != TipoToken.OPEN_PAR) {\n                throw new RuntimeException(\"[Parser] Expected (\");\n            }\n            lexer.selectNext();\n            if (lexer.next.tipo != TipoToken.CLOSE_PAR) {\n                throw new RuntimeException(\"[Parser] Expected )\");\n            }\n            lexer.selectNext();\n            return new Read();\n\n        } else {\n            throw new RuntimeException(\"[Parser] Unexpected token in factor: \" + lexer.next.tipo);\n        }\n    }\n\n    static Node parseTerm() {\n        Node node = parseFactor();\n        while (lexer.next.tipo == TipoToken.MULT || lexer.next.tipo == TipoToken.DIV) {\n            String operador = (lexer.next.tipo == TipoToken.MULT) ? \"*\" : \"/\";\n            lexer.selectNext();\n            Node direito = parseFactor();\n            node = new BinOp(operador, node, direito);\n        }\n        return node;\n    }\n\n    static Node parseExpression() {\n        Node node = parseTerm();\n        while (lexer.next.tipo == TipoToken.PLUS || lexer.next.tipo == TipoToken.MINUS) {\n            String operador = (lexer.next.tipo == TipoToken.PLUS) ? \"+\" : \"-\";\n            lexer.selectNext();\n            Node direito = parseTerm();\n            node = new BinOp(operador, node, direito);\n        }\n        return node;\n    }\n\n    // R6: mesmo molde do parseExpression, um degrau ACIMA na precedência:\n    // REL_EXPRESSION = EXPRESSION, { (\"==\" | \">\" | \"<\"), EXPRESSION }\n    static Node parseRelExpression() {\n        Node node = parseExpression();\n        while (lexer.next.tipo == TipoToken.EQ || lexer.next.tipo == TipoToken.GT || lexer.next.tipo == TipoToken.LT) {\n            String operador = (lexer.next.tipo == TipoToken.EQ) ? \"==\" : (lexer.next.tipo == TipoToken.GT) ? \">\" : \"<\";\n            lexer.selectNext();\n            Node direito = parseExpression();\n            node = new BinOp(operador, node, direito);\n        }\n        return node;\n    }\n\n    // R6: BOOL_TERM = REL_EXPRESSION, { \"&&\", REL_EXPRESSION }\n    static Node parseBoolTerm() {\n        Node node = parseRelExpression();\n        while (lexer.next.tipo == TipoToken.AND) {\n            lexer.selectNext();\n            Node direito = parseRelExpression();\n            node = new BinOp(\"&&\", node, direito);\n        }\n        return node;\n    }\n\n    // R6: BOOL_EXPRESSION = BOOL_TERM, { \"||\", BOOL_TERM } - o degrau mais\n    // de cima: || é quem tem a MENOR precedência de todas\n    static Node parseBoolExpression() {\n        Node node = parseBoolTerm();\n        while (lexer.next.tipo == TipoToken.OR) {\n            lexer.selectNext();\n            Node direito = parseBoolTerm();\n            node = new BinOp(\"||\", node, direito);\n        }\n        return node;\n    }\n\n    // R6: BLOCK = \"{\", { STATEMENT }, \"}\" - parecido com o parseProgram,\n    // só que o laço para no \"}\" em vez de parar no EOF\n    static Node parseBlock() {\n        if (lexer.next.tipo != TipoToken.OPEN_BRA) {\n            throw new RuntimeException(\"[Parser] Expected {\");\n        }\n        lexer.selectNext();\n        Node bloco = new Block();\n        while (lexer.next.tipo != TipoToken.CLOSE_BRA) {\n            if (lexer.next.tipo == TipoToken.EOF) {\n                throw new RuntimeException(\"[Parser] Expected }\");\n            }\n            Node statement = parseStatement();\n            bloco.children.add(statement);\n        }\n        lexer.selectNext();\n        return bloco;\n    }\n\n    static Node parseStatement() {\n\n        if (lexer.next.tipo == TipoToken.PRINT) {\n            lexer.selectNext();\n            if (lexer.next.tipo != TipoToken.OPEN_PAR) {\n                throw new RuntimeException(\"[Parser] Expected (\");\n            }\n            lexer.selectNext();\n            Node expressao = parseBoolExpression();\n            if (lexer.next.tipo != TipoToken.CLOSE_PAR) {\n                throw new RuntimeException(\"[Parser] Expected )\");\n            }\n            lexer.selectNext();\n            Node printNode = new Print(expressao);\n\n            if (lexer.next.tipo != TipoToken.END) {\n                throw new RuntimeException(\"[Parser] Expected end of line\");\n            }\n            lexer.selectNext();\n            return printNode;\n\n        } else if (lexer.next.tipo == TipoToken.IDEN) {\n            String nome = lexer.next.nome;\n            Node idNode = new Identifier(nome);\n            lexer.selectNext();\n\n            if (lexer.next.tipo != TipoToken.ASSIGN) {\n                throw new RuntimeException(\"[Parser] Expected =\");\n            }\n            lexer.selectNext();\n\n            Node expressao = parseBoolExpression();\n            Node assignNode = new Assignment(idNode, expressao);\n\n            if (lexer.next.tipo != TipoToken.END) {\n                throw new RuntimeException(\"[Parser] Expected end of line\");\n            }\n            lexer.selectNext();\n            return assignNode;\n\n        } else if (lexer.next.tipo == TipoToken.IF) {\n            // R6: IF = \"if\", BOOL_EXPRESSION, BLOCK, [ \"else\", BLOCK ]\n            lexer.selectNext();\n            Node condicao = parseBoolExpression();\n            Node entao = parseBlock();\n            Node senao = null;\n            if (lexer.next.tipo == TipoToken.ELSE) {\n                lexer.selectNext();\n                senao = parseBlock();\n            }\n            Node ifNode = new If(condicao, entao, senao);\n\n            if (lexer.next.tipo != TipoToken.END) {\n                throw new RuntimeException(\"[Parser] Expected end of line\");\n            }\n            lexer.selectNext();\n            return ifNode;\n\n        } else if (lexer.next.tipo == TipoToken.WHILE) {\n            // R6: FOR = \"for\", BOOL_EXPRESSION, BLOCK - o \"while\" do Go\n            lexer.selectNext();\n            Node condicao = parseBoolExpression();\n            Node corpo = parseBlock();\n            Node whileNode = new While(condicao, corpo);\n\n            if (lexer.next.tipo != TipoToken.END) {\n                throw new RuntimeException(\"[Parser] Expected end of line\");\n            }\n            lexer.selectNext();\n            return whileNode;\n\n        } else if (lexer.next.tipo == TipoToken.END) {\n            lexer.selectNext();\n            return new NoOp();\n\n        } else {\n            throw new RuntimeException(\"[Parser] Unexpected token in statement: \" + lexer.next.tipo);\n        }\n    }\n\n    static Node parseProgram() {\n        Node bloco = new Block();\n        while (lexer.next.tipo != TipoToken.EOF) {\n            Node statement = parseStatement();\n            bloco.children.add(statement);\n        }\n        return bloco;\n    }\n\n    static Node run(String code) {\n        lexer = new Lexer(code);\n        lexer.selectNext();\n        Node raiz = parseProgram();\n\n        if (lexer.next.tipo != TipoToken.EOF) {\n            throw new RuntimeException(\"[Parser] Unexpected token \" + lexer.next.tipo);\n        }\n        return raiz;\n    }\n}\n","linhas":{"main_read":17,"main_nl":18,"main_prepro":20,"main_parse":22,"main_st":24,"main_eval":25,"prepro":32,"st_get_chk":57,"st_get_err":58,"st_get_ret":60,"st_set_chk":64,"st_set_upd":65,"st_set_new":67,"lex_ws":111,"lex_eof":118,"lex_end":121,"lex_plus":125,"lex_minus":129,"lex_mult":133,"lex_div":137,"lex_open":141,"lex_close":145,"lex_eq_chk":151,"lex_eq":152,"lex_assign":155,"lex_and_chk":161,"lex_and":162,"lex_and_err":165,"lex_or_chk":170,"lex_or":171,"lex_or_err":174,"lex_not":178,"lex_gt":182,"lex_lt":186,"lex_obra":190,"lex_cbra":194,"lex_num_loop":199,"lex_num":203,"lex_word_loop":207,"lex_kw_chk":213,"lex_print":214,"lex_if":216,"lex_while":219,"lex_else":221,"lex_read":223,"lex_iden":225,"lex_err":229,"ev_int":248,"ev_un_child":259,"ev_un_neg":261,"ev_un_not":264,"ev_un_pos":266,"ev_bin_l":279,"ev_bin_r":280,"ev_bin_plus":283,"ev_bin_minus":285,"ev_bin_mult":287,"ev_bin_div_chk":289,"ev_bin_div_err":290,"ev_bin_div":292,"ev_bin_eq":295,"ev_bin_gt":297,"ev_bin_lt":299,"ev_bin_and":303,"ev_bin_or":305,"ev_iden":318,"ev_print_child":328,"ev_print_out":329,"ev_asg_child":341,"ev_asg_name":342,"ev_asg_set":343,"ev_block_for":350,"ev_block_child":351,"ev_noop":359,"ev_if_cond":374,"ev_if_then":375,"ev_if_has_else":376,"ev_if_else":377,"ev_if_end":379,"ev_while_cond":391,"ev_while_body":392,"ev_while_end":394,"ev_read_chk":405,"ev_read_eof":406,"ev_read_line":408,"ev_read_ret":410,"ev_read_err":412,"pf_enter":421,"pf_num_chk":422,"pf_num":423,"pf_num_next":424,"pf_plus_chk":427,"pf_plus_next":428,"pf_plus_call":429,"pf_plus_ret":430,"pf_minus_chk":432,"pf_minus_next":433,"pf_minus_call":434,"pf_minus_ret":435,"pf_not_chk":437,"pf_not_next":439,"pf_not_call":440,"pf_not_ret":441,"pf_par_chk":443,"pf_par_next":444,"pf_par_call":446,"pf_par_close_chk":447,"pf_par_err":448,"pf_par_close_next":450,"pf_par_ret":451,"pf_iden_chk":453,"pf_iden":454,"pf_iden_next":455,"pf_read_chk":458,"pf_read_next":461,"pf_read_open_chk":462,"pf_read_open_err":463,"pf_read_open_next":465,"pf_read_close_chk":466,"pf_read_close_err":467,"pf_read_close_next":469,"pf_read_ret":470,"pf_err":473,"pt_enter":477,"pt_first":478,"pt_while":479,"pt_op":480,"pt_op_next":481,"pt_right":482,"pt_binop":483,"pt_ret":485,"pe_enter":488,"pe_first":489,"pe_while":490,"pe_op":491,"pe_op_next":492,"pe_right":493,"pe_binop":494,"pe_ret":496,"pr_enter":501,"pr_first":502,"pr_while":503,"pr_op":504,"pr_op_next":505,"pr_right":506,"pr_binop":507,"pr_ret":509,"pbt_enter":513,"pbt_first":514,"pbt_while":515,"pbt_op_next":516,"pbt_right":517,"pbt_binop":518,"pbt_ret":520,"pbe_enter":525,"pbe_first":526,"pbe_while":527,"pbe_op_next":528,"pbe_right":529,"pbe_binop":530,"pbe_ret":532,"pb_enter":537,"pb_open_chk":538,"pb_open_err":539,"pb_open_next":541,"pb_block":542,"pb_while":543,"pb_eof_chk":544,"pb_eof_err":545,"pb_stmt":547,"pb_add":548,"pb_close_next":550,"pb_ret":551,"ps_enter":554,"ps_print_chk":556,"ps_print_next":557,"ps_print_open_chk":558,"ps_print_open_err":559,"ps_print_open_next":561,"ps_print_expr":562,"ps_print_close_chk":563,"ps_print_close_err":564,"ps_print_close_next":566,"ps_print_node":567,"ps_print_end_chk":569,"ps_print_end_err":570,"ps_print_end_next":572,"ps_print_ret":573,"ps_iden_chk":575,"ps_iden_name":576,"ps_iden_node":577,"ps_iden_next":578,"ps_assign_chk":580,"ps_assign_err":581,"ps_assign_next":583,"ps_asg_expr":585,"ps_asg_node":586,"ps_asg_end_chk":588,"ps_asg_end_err":589,"ps_asg_end_next":591,"ps_asg_ret":592,"ps_if_chk":594,"ps_if_next":596,"ps_if_cond":597,"ps_if_then":598,"ps_else_chk":600,"ps_else_next":601,"ps_else_block":602,"ps_if_node":604,"ps_if_end_chk":606,"ps_if_end_err":607,"ps_if_end_next":609,"ps_if_ret":610,"ps_while_chk":612,"ps_while_next":614,"ps_while_cond":615,"ps_while_body":616,"ps_while_node":617,"ps_while_end_chk":619,"ps_while_end_err":620,"ps_while_end_next":622,"ps_while_ret":623,"ps_empty_chk":625,"ps_empty_next":626,"ps_noop":627,"ps_err":630,"pp_enter":634,"pp_block":635,"pp_while":636,"pp_stmt":637,"pp_add":638,"pp_ret":640,"run_enter":643,"run_lexer":644,"run_first":645,"run_prog":646,"run_eof_chk":648,"run_err":649,"run_ret":651}};</script>
+<script>
+/* =========================================================================
+   ROTEIRO 6 — depurador animado (Java)
+   Usa o Motor (r6/motor.js, validado contra o javac) e a referência Java
+   do Roteiro 6 (window.R6_FONTE). Visual no mesmo estilo da animação
+   da Colinha: fita de tokens, pilha de chamadas, AST e código ativo.
+   ========================================================================= */
+(function () {
+  "use strict";
+  var F = window.R6_FONTE, SRC = F.src.split("\n"), LN = F.linhas;
+
+  function h(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+  // ---------------------------------------------------------- realce Java
+  var RE = /(\/\/[^\n]*)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*')|\b(abstract|class|extends|static|void|int|new|return|if|else|while|for|throw|public|private|throws|import|enum|try|catch|null|this)\b|\b(String|Object|Node|Token|TipoToken|Lexer|Parser|SymbolTable|Variable|HashMap|ArrayList|RuntimeException|NumberFormatException|Exception|Scanner|Integer|Character|PrePro|Block|BinOp|UnOp|IntVal|Identifier|Print|Assignment|NoOp|If|While|Read|Files|Paths|System)\b|\b(\d+)\b/g;
+  function realce(l) {
+    return h(l).replace(RE, function (m, c, s, k, t, n) {
+      if (c) return '<span class="c">' + c + "</span>";
+      if (s) return '<span class="s">' + s + "</span>";
+      if (k) return '<span class="k">' + k + "</span>";
+      if (t) return '<span class="ty">' + t + "</span>";
+      if (n) return '<span class="n">' + n + "</span>";
+      return m;
+    });
+  }
+
+  // ---------------------------------------------- métodos do arquivo Java
+  var METODOS = (function () {
+    var M = [];
+    SRC.forEach(function (l, i) {
+      var m = /^\s+(?:public\s+|static\s+|abstract\s+|private\s+)*[\w<>\[\],]+\s+(\w+)\s*\([^)]*\)\s*(?:throws\s+\w+\s*)?\{/.exec(l);
+      if (!m || /^(if|while|for|switch|catch)$/.test(m[1])) return;
+      var prof = 0;
+      for (var j = i; j < SRC.length; j++) {
+        var sem = SRC[j].replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|\/\/.*$/g, "");
+        prof += (sem.match(/\{/g) || []).length - (sem.match(/\}/g) || []).length;
+        if (prof <= 0) { M.push({ de: i + 1, ate: j + 1 }); break; }
+      }
+    });
+    return M;
+  })();
+  function metodoDe(l) {
+    var best = null;
+    METODOS.forEach(function (m) { if (l >= m.de && l <= m.ate && (!best || m.ate - m.de < best.ate - best.de)) best = m; });
+    return best;
+  }
+
+  // ------------------------------------------------------------ rótulos
+  function rotNo(n) {
+    switch (n.cls) {
+      case "IntVal": return String(n.value);
+      case "Identifier": return n.value;
+      case "UnOp": case "BinOp": return String(n.value);
+      case "Print": return "Println";
+      case "Assignment": return "=";
+      case "Read": return "Scanln()";
+      default: return n.cls;
+    }
+  }
+  function nomeNo(n) {
+    if (!n) return "";
+    if (n.cls === "IntVal") return "IntVal(" + n.value + ")";
+    if (n.cls === "Identifier") return 'Identifier("' + n.value + '")';
+    if (n.cls === "UnOp" || n.cls === "BinOp") return n.cls + '("' + n.value + '")';
+    if (n.cls === "Block") return "Block";
+    return n.cls;
+  }
+  function nomeFrame(f, T) {
+    var p = f.fn.split(".");
+    if (p[1] === "evaluate" && f.no != null) return nomeNo(T.nodes[f.no]) + ".evaluate()";
+    if (p[0] === "SymbolTable" && f.loc && f.loc.nome) return f.fn + '("' + f.loc.nome + '"' + (f.loc.valor !== undefined ? ", " + f.loc.valor : "") + ")";
+    return f.fn + "()";
+  }
+  var KIND = function (fn) { return /^Lexer/.test(fn) ? "lex" : /^Parser/.test(fn) ? "syn" : /evaluate|SymbolTable|Scanner/.test(fn) ? "sem" : "main"; };
+  var RET_EVAL = /^(ev_int|ev_un_neg|ev_un_not|ev_un_pos|ev_bin_(plus|minus|mult|div|eq|gt|lt|and|or)|ev_read_ret|st_get_ret)$/;
+
+  var EXEMPLOS = [
+    ["fatorial (meta)", "i = 1\nn = 5\nf = 1\nif n < 2 {\n    f = 1\n} else {\n    for i < n || i == n {\n        f = f * i\n        i = i + 1\n    }\n}\nPrintln(f)", ""],
+    ["Scanln + if/else", "x = Scanln()\ny = Scanln()\nif x > y && !(x == 0) {\n    Println(x)\n} else {\n    Println(y)\n}", "7\n3\n"],
+    ["for com && e !", "n = Scanln()\ni = 0\nfor i < n && !(i == 3) {\n    Println(i)\n    i = i + 1\n}", "10\n"],
+    ["precedência", "Println(1 + 2 * 3 == 7 && !0 || 0)", ""],
+    ["só expressão", "x = 3 > 2 == 1", ""],
+    ["erro: else", "if 1 {\n    Println(1)\n}\nelse {\n    Println(2)\n}", ""],
+    ["erro: &", "x = 1 & 2", ""],
+    ["erro: variável", "if 1 == 1 {\n    Println(y)\n}", ""],
+    ["sem curto-circuito", "if 1 > 0 || 1 / 0 == 0 {\n    Println(1)\n}", ""],
+    ["laço infinito", "i = 0\nfor i < 3 {\n    Println(i)\n}", ""]
+  ];
+
+  var SELO = { main: "Preparação", prepro: "PrePro", lexer: "Léxico", parser: "Sintático", eval: "Semântico", erro: "Erro", fim: "Fim" };
+  var COR = { lexer: "#14674c", parser: "#215c7a", eval: "#bd711d", erro: "#a13216", main: "#819096", prepro: "#819096", fim: "#14674c" };
+
+  function montar(host) {
+    var uid = "r6d" + Math.random().toString(36).slice(2, 7);
+    host.classList.add("r6");
+    host.innerHTML =
+      '<div class="r6-ent">' +
+        '<div class="r6-campos">' +
+          '<div class="r6-campo"><label class="lb" for="' + uid + '-src">Programa (entrada.go)</label><textarea id="' + uid + '-src" class="r6-src" spellcheck="false" autocomplete="off" rows="10"></textarea></div>' +
+          '<div class="r6-campo r6-campo-in"><label class="lb" for="' + uid + '-in">Terminal (stdin) · uma linha por Scanln()</label><textarea id="' + uid + '-in" class="r6-in" spellcheck="false" autocomplete="off" rows="3"></textarea>' +
+            '<button type="button" class="btn play r6-run">▶ Compilar e animar</button><span class="r6-dica">Ctrl+Enter compila · ← → passo · espaço roda</span></div>' +
+        "</div>" +
+        '<div class="r6-ex"><span class="lb">Exemplos</span></div>' +
+      "</div>" +
+      '<div class="r6-anim">' +
+        '<div class="an-top"><span class="lb">Tokens que o Lexer já entregou</span><span class="an-fase r6-fase"></span></div>' +
+        '<div class="an-fita r6-fita"></div>' +
+        '<div class="an-grid r6-grid">' +
+          '<div class="an-col"><h5>Pilha de chamadas</h5><div class="an-pilha r6-pilha"></div></div>' +
+          '<div class="an-col"><h5 class="r6-arv-h">AST</h5><div class="an-arv r6-arv"></div></div>' +
+          '<div class="an-col"><h5 class="r6-cod-h-wrap"><span class="r6-cod-h">Código</span><button type="button" class="r6-tgl" aria-pressed="false">arquivo inteiro</button></h5><div class="an-cod r6-cod"></div></div>' +
+        "</div>" +
+        '<div class="r6-grid2">' +
+          '<div class="an-col"><h5>Programa · trecho em uso e lexer.position</h5><div class="r6-fonte"></div></div>' +
+          '<div class="an-col"><h5>SymbolTable</h5><div class="r6-st"></div></div>' +
+          '<div class="r6-col-io"><div class="an-saida r6-saida"></div><div class="r6-stdin"></div></div>' +
+        "</div>" +
+        '<div class="an-narra r6-narra"><span class="pn r6-pn"></span><span class="tx r6-tx"></span></div>' +
+        '<div class="an-ctrl">' +
+          '<button class="btn r6-ini" type="button" title="Início" aria-label="Início">⏮</button>' +
+          '<button class="btn r6-ant" type="button" title="Passo anterior" aria-label="Passo anterior">◀</button>' +
+          '<button class="btn play r6-play" type="button">▶ Rodar</button>' +
+          '<button class="btn r6-prox" type="button" title="Próximo passo" aria-label="Próximo passo">▶</button>' +
+          '<button class="btn r6-fase-btn" type="button" title="Pular para a próxima fase">⇥ fase</button>' +
+          '<button class="btn r6-fim" type="button" title="Fim" aria-label="Fim">⏭</button>' +
+          '<span class="r6-sl-wrap"><input type="range" class="r6-sl" min="0" max="0" value="0" aria-label="Linha do tempo"><canvas class="r6-faixa" height="6" aria-hidden="true"></canvas></span>' +
+          '<span class="conta r6-conta"></span>' +
+          '<select class="r6-vel" aria-label="Velocidade"><option value="1100">lento</option><option value="600" selected>normal</option><option value="260">rápido</option><option value="70">turbo</option></select>' +
+          '<label class="r6-chk"><input type="checkbox" class="r6-pulalex"> pular passos do Lexer</label>' +
+        "</div>" +
+      "</div>";
+
+    var $ = function (s) { return host.querySelector(s); };
+    var E = {
+      src: $(".r6-src"), inp: $(".r6-in"), ex: $(".r6-ex"), fase: $(".r6-fase"), fita: $(".r6-fita"), pilha: $(".r6-pilha"),
+      arv: $(".r6-arv"), arvH: $(".r6-arv-h"), cod: $(".r6-cod"), codH: $(".r6-cod-h"), tgl: $(".r6-tgl"), fonte: $(".r6-fonte"),
+      st: $(".r6-st"), saida: $(".r6-saida"), stdin: $(".r6-stdin"), pn: $(".r6-pn"), tx: $(".r6-tx"),
+      sl: $(".r6-sl"), faixa: $(".r6-faixa"), conta: $(".r6-conta"), play: $(".r6-play"), vel: $(".r6-vel"), pula: $(".r6-pulalex")
+    };
+    var S = { res: null, i: 0, timer: null, inteiro: false, mostra: "" };
+
+    EXEMPLOS.forEach(function (ex, k) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "preset"; b.textContent = ex[0];
+      b.setAttribute("aria-pressed", k === 0 ? "true" : "false");
+      b.addEventListener("click", function () {
+        Array.prototype.forEach.call(E.ex.querySelectorAll(".preset"), function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+        E.src.value = ex[1]; E.inp.value = ex[2]; compila(); tocar();
+      });
+      E.ex.appendChild(b);
+    });
+
+    function compila() {
+      parar();
+      var src = E.src.value;
+      S.res = Motor.executar("v2.1", src, { stdin: E.inp.value, max: 20000 });
+      S.mostra = src + "\n";
+      S.stdin = E.inp.value;
+      E.sl.max = String(S.res.trace.steps.length - 1);
+      faixa();
+      ir(0);
+    }
+
+    // ------------------------------------------------------- navegação
+    function visivel(k) { var s = S.res.trace.steps[k]; return !(E.pula.checked && s.fase === "lexer") || s.erro; }
+    function passo(d) {
+      var n = S.res.trace.steps.length, k = S.i + d;
+      while (k >= 0 && k < n && !visivel(k)) k += d;
+      if (k < 0 || k >= n) return false;
+      ir(k); return true;
+    }
+    function parar() { if (S.timer) { clearTimeout(S.timer); S.timer = null; } E.play.textContent = "▶ Rodar"; }
+    function tocar() {
+      if (S.timer) return parar();
+      if (S.i >= S.res.trace.steps.length - 1) ir(0);
+      E.play.textContent = "‖ Pausar";
+      (function t() { if (!passo(1)) return parar(); S.timer = setTimeout(t, +E.vel.value); })();
+    }
+    function pulaFase() {
+      var St = S.res.trace.steps, grupo = function (f) { return f === "lexer" || f === "parser" ? "ls" : f; }, g = grupo(St[S.i].fase), k = S.i + 1;
+      while (k < St.length && grupo(St[k].fase) === g) k++;
+      if (k < St.length) ir(k);
+    }
+    $(".r6-ini").onclick = function () { parar(); ir(0); };
+    $(".r6-fim").onclick = function () { parar(); ir(S.res.trace.steps.length - 1); };
+    $(".r6-ant").onclick = function () { parar(); passo(-1); };
+    $(".r6-prox").onclick = function () { parar(); passo(1); };
+    $(".r6-fase-btn").onclick = function () { parar(); pulaFase(); };
+    E.play.onclick = tocar;
+    E.sl.oninput = function () { parar(); ir(+E.sl.value); };
+    $(".r6-run").onclick = function () { compila(); tocar(); };
+    E.tgl.onclick = function () { S.inteiro = !S.inteiro; E.tgl.setAttribute("aria-pressed", S.inteiro); E.tgl.textContent = S.inteiro ? "só a função" : "arquivo inteiro"; ir(S.i); };
+    E.src.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); compila(); tocar(); }
+      else if (e.key === "Tab") { e.preventDefault(); E.src.setRangeText("    ", E.src.selectionStart, E.src.selectionEnd, "end"); }
+    });
+    host.addEventListener("keydown", function (e) {
+      var t = e.target.tagName;
+      if (t === "TEXTAREA" || t === "SELECT" || (t === "INPUT" && e.target.type !== "range")) return;
+      if (e.key === "ArrowRight") { e.preventDefault(); parar(); passo(1); }
+      else if (e.key === "ArrowLeft") { e.preventDefault(); parar(); passo(-1); }
+      else if (e.key === " ") { e.preventDefault(); tocar(); }
+    });
+
+    function faixa() {
+      var cv = E.faixa, St = S.res.trace.steps, w = cv.clientWidth || 300;
+      cv.width = w;
+      var ctx = cv.getContext("2d");
+      for (var x = 0; x < w; x++) {
+        var s = St[Math.min(St.length - 1, Math.floor(x / w * St.length))];
+        ctx.fillStyle = COR[s.fase] || "#c9d5d6";
+        ctx.fillRect(x, 0, 1, 6);
+      }
+    }
+    if (window.ResizeObserver) new ResizeObserver(function () { if (S.res) faixa(); }).observe(E.faixa);
+
+    // ---------------------------------------------------------- desenho
+    function ir(k) {
+      var T = S.res.trace, St = T.steps;
+      S.i = Math.max(0, Math.min(St.length - 1, k));
+      var s = St[S.i], ant = S.i > 0 ? St[S.i - 1] : null;
+      E.sl.value = String(S.i);
+      E.conta.textContent = (S.i + 1) + " / " + St.length;
+      var avaliando = s.fase === "eval" || s.fase === "fim" || (s.fase === "erro" && s.st);
+      E.fase.textContent = s.fase === "erro" ? "Erro" : avaliando ? "Fase 2 · evaluate()" : s.fase === "lexer" || s.fase === "parser" ? "Fase 1 · Lexer + Parser" : "Preparação · main()";
+      E.fase.className = "an-fase r6-fase" + (avaliando ? " ev" : "") + (s.fase === "erro" ? " er" : "");
+      fita(T, s, avaliando);
+      pilha(T, s, ant);
+      arvore(T, s, avaliando);
+      codigo(s);
+      fonte(T, s);
+      tabela(T, s);
+      io(T, s);
+      narra(T, s);
+    }
+
+    function fita(T, s, avaliando) {
+      E.fita.className = "an-fita r6-fita" + (avaliando ? " apagada" : "");
+      if (!s.nt) { E.fita.innerHTML = '<span class="r6-vazio">nenhum token ainda: o Lexer só trabalha quando o Parser chama <b>selectNext()</b></span>'; return; }
+      var html = "";
+      for (var k = 0; k < s.nt; k++) {
+        var t = T.tokens[k], cls = "an-tk";
+        if (k < s.cur) cls += " lido";
+        if (k === s.cur && !avaliando) cls += " nx";
+        if (t.s === S.i) cls += " r6-novo";
+        var v = t.tipo === "NUMERO" || t.tipo === "IDEN" ? '<span class="r6-tv">' + h(t.v) + "</span>" : "";
+        html += '<span class="' + cls + '" title="' + h(t.txt) + '">' + h(t.tipo) + v + "</span>";
+      }
+      E.fita.innerHTML = html;
+      var nx = E.fita.querySelector(".nx");
+      if (nx && E.fita.scrollWidth > E.fita.clientWidth) E.fita.scrollLeft = nx.offsetLeft - E.fita.clientWidth / 2;
+    }
+
+    function pilha(T, s, ant) {
+      if (!s.fr.length) { E.pilha.innerHTML = '<span class="r6-vazio">vazia</span>'; return; }
+      var html = "", topo = s.fr.length - 1;
+      for (var d = topo; d >= 0; d--) {
+        var f = s.fr[d], nome = nomeFrame(f, T), kind = KIND(f.fn), st, cls = "an-fr r6-fr r6-" + kind;
+        var novo = !ant || !ant.fr[d] || ant.fr[d].fn !== f.fn || ant.fr[d].no !== f.no;
+        if (d === topo) {
+          cls += " topo";
+          var ret = retorno(T, s, f);
+          if (ret !== null) { cls += " volta"; st = "↩ devolve " + ret; }
+          else st = "rodando agora · linha " + (LN[f.k] || "—");
+        } else st = "esperando a de cima voltar · linha " + (LN[f.k] || "—");
+        if (novo && ant) cls += " novo";
+        if (s.erro && d === topo) { cls += " err"; st = "lança " + (s.erro.origem === "Java" ? s.erro.cls.split(".").pop() : "[" + s.erro.origem + "]"); }
+        var loc = "";
+        if (f.loc) for (var n in f.loc) if (f.loc[n] !== null && f.loc[n] !== undefined && n !== "nome") loc += '<span><i>' + h(n) + "</i> = " + h(f.loc[n]) + "</span>";
+        html += '<div class="' + cls + '"><span class="nm">' + h(nome) + '</span><span class="st">' + h(st) + "</span>" + (loc ? '<span class="r6-loc">' + loc + "</span>" : "") + "</div>";
+      }
+      E.pilha.innerHTML = html + '<div class="an-base">↑ a de cima é a que está rodando</div>';
+    }
+    function retorno(T, s, f) {
+      if (RET_EVAL.test(s.k)) {
+        if (s.k === "st_get_ret") return s.st[f.loc.nome];
+        for (var v = T.vals.length - 1; v >= 0; v--) if (T.vals[v].s === S.i && T.vals[v].id === f.no) return T.vals[v].v;
+      }
+      if (/_ret$/.test(s.k) && s.node != null && /^Parser/.test(f.fn)) return "o nó " + nomeNo(T.nodes[s.node]);
+      return null;
+    }
+
+    function arvore(T, s, avaliando) {
+      var i = S.i, vis = {}, filhos = {}, pai = {}, lista = [];
+      T.nodes.forEach(function (n) {
+        if (n.s > i) return;
+        vis[n.id] = 1; lista.push(n.id); filhos[n.id] = [];
+        n.kids.forEach(function (c) { if (c.s <= i) { filhos[n.id].push(c); pai[c.id] = n.id; } });
+      });
+      E.arvH.textContent = avaliando ? "AST sendo avaliada" : "AST sendo montada pelo Parser";
+      if (!lista.length) { E.arv.innerHTML = '<span class="r6-vazio">' + (s.fase === "lexer" || s.fase === "main" || s.fase === "prepro" ? "a árvore aparece conforme o Parser monta" : "…") + "</span>"; return; }
+      var raizes = lista.filter(function (id) { return pai[id] === undefined; });
+      var val = {}, valNovo = {};
+      T.vals.forEach(function (v) { if (v.s <= i) { val[v.id] = v.v; if (v.s === i) valNovo[v.id] = 1; } });
+      var ativos = {};
+      s.fr.forEach(function (f) { if (f.no != null) ativos[f.no] = 1; });
+      var W = 70, H = 64, PAD = 18, col = 0, pos = {}, prof = 0;
+      raizes.forEach(function (r, ri) {
+        if (ri) col += 0.7;
+        (function vai(id, d) {
+          prof = Math.max(prof, d);
+          var fs = filhos[id];
+          if (!fs.length) { pos[id] = { c: col++, p: d }; return; }
+          fs.forEach(function (c) { vai(c.id, d + 1); });
+          pos[id] = { c: (pos[fs[0].id].c + pos[fs[fs.length - 1].id].c) / 2, p: d };
+        })(r, 0);
+      });
+      var larg = Math.max(col, 1) * W + PAD * 2, alt = (prof + 1) * H + PAD * 2 + 12;
+      function px(id) { return PAD + pos[id].c * W + W / 2; }
+      function py(id) { return PAD + pos[id].p * H + 18; }
+      var ed = "", nos = "";
+      lista.forEach(function (id) {
+        filhos[id].forEach(function (c) {
+          var x1 = px(id), y1 = py(id) + 12, x2 = px(c.id), y2 = py(c.id) - 13;
+          ed += '<path class="an-e' + (ativos[c.id] && ativos[id] ? " ativo" : "") + (c.s === i ? " r6-e-novo" : "") + '" d="M' + x1 + " " + y1 + " C" + x1 + " " + (y1 + 20) + " " + x2 + " " + (y2 - 20) + " " + x2 + " " + y2 + '" fill="none" pathLength="1"/>';
+        });
+      });
+      lista.forEach(function (id) {
+        var n = T.nodes[id], t = rotNo(n), w = Math.max(28, t.length * 7.6 + 16), x = px(id), y = py(id);
+        var tipo = n.cls === "IntVal" || n.cls === "Identifier" || n.cls === "Read" ? "folha" : n.cls === "BinOp" || n.cls === "UnOp" ? "op" : "stmt";
+        var cls = "an-n r6-n r6-" + tipo + (ativos[id] ? " ativo" : "") + (s.node === id ? " topo" : "") + (n.s === i ? " entra" : "");
+        var mostraV = val[id] !== undefined && (tipo !== "stmt");
+        nos += '<g class="' + cls + '"><title>' + h(nomeNo(n)) + "</title><rect x=\"" + (x - w / 2) + '" y="' + (y - 12) + '" width="' + w + '" height="24" rx="' + (tipo === "folha" ? 12 : 5) + '"/>' +
+          '<text x="' + x + '" y="' + (y + 4) + '">' + h(t) + "</text>" +
+          (mostraV ? '<text class="rv' + (valNovo[id] ? " r6-rv-novo" : "") + '" x="' + x + '" y="' + (y + 27) + '">↩ ' + h(val[id]) + "</text>" : "") + "</g>";
+      });
+      E.arv.innerHTML = '<svg viewBox="0 0 ' + larg + " " + alt + '" width="' + larg + '" role="img" aria-label="Árvore sintática abstrata">' + ed + nos + "</svg>" +
+        (raizes.length > 1 ? '<div class="r6-soltas">' + (raizes.length - 1) + " subárvore(s) ainda soltas: esperando o Parser pendurar num pai</div>" : "");
+      // segue o nó atual; senão o recém-criado; senão o ativo mais fundo da pilha de evaluate()
+      var fundo = null, prof2 = -1;
+      s.fr.forEach(function (f, d) { if (f.no != null && d > prof2) { prof2 = d; fundo = f.no; } });
+      var gFundo = fundo != null ? E.arv.querySelectorAll(".r6-n")[lista.indexOf(fundo)] : null;
+      var alvo = E.arv.querySelector(".topo rect") || E.arv.querySelector(".entra rect") || (gFundo && gFundo.querySelector("rect"));
+      if (alvo) {
+        var ax = parseFloat(alvo.getAttribute("x")), ay = parseFloat(alvo.getAttribute("y"));
+        E.arv.scrollLeft = Math.max(0, ax - E.arv.clientWidth / 2 + 30);
+        E.arv.scrollTop = Math.max(0, ay - E.arv.clientHeight / 2);
+      }
+    }
+
+    function codigo(s) {
+      var l = LN[s.k], topo = s.fr[s.fr.length - 1];
+      E.codH.textContent = topo ? "Código de " + nomeFrame(topo, S.res.trace) : "Código";
+      var de = 1, ate = SRC.length;
+      if (!S.inteiro && l) { var m = metodoDe(l); if (m) { de = m.de; ate = m.ate; } }
+      var chamadores = {};
+      if (S.inteiro) s.fr.slice(0, -1).forEach(function (f) { if (LN[f.k]) chamadores[LN[f.k]] = 1; });
+      var html = "";
+      for (var k = de; k <= ate; k++) {
+        var cls = "l" + (k === l ? " on" + (s.erro ? " r6-on-erro" : "") : "") + (chamadores[k] ? " r6-pai" : "");
+        html += '<span class="' + cls + '"><span class="ln">' + k + "</span>" + (realce(SRC[k - 1]) || " ") + "</span>";
+      }
+      E.cod.innerHTML = html;
+      var on = E.cod.querySelector(".on");
+      if (on) E.cod.scrollTop = Math.max(0, on.offsetTop - E.cod.clientHeight / 2 + 12);
+    }
+
+    function fonte(T, s) {
+      var txt = S.mostra, hl = s.hl, com = new Uint8Array(txt.length + 1).fill(1);
+      if (T.map) T.map.forEach(function (p) { com[p] = 0; }); else com.fill(0);
+      var pos = s.pos != null && T.map ? T.map[Math.min(s.pos, T.map.length - 1)] : -1;
+      var mostraCaret = s.fase === "lexer" || s.fase === "parser" || (s.fase === "erro" && !s.st);
+      var out = "";
+      for (var i = 0; i <= txt.length; i++) {
+        if (i === pos && mostraCaret) out += '<span class="r6-caret" title="lexer.position"></span>';
+        if (i === txt.length) break;
+        var c = txt[i], cl = [];
+        if (hl && i >= hl[0] && i < hl[1]) cl.push("agora");
+        if (com[i]) cl.push("com");
+        var ch = c === "\n" ? '<span class="nl">↵</span>\n' : c === "\t" ? "    " : h(c);
+        out += cl.length ? '<span class="' + cl.join(" ") + '">' + ch + "</span>" : ch;
+      }
+      E.fonte.innerHTML = out;
+      var a = E.fonte.querySelector(".agora") || E.fonte.querySelector(".r6-caret");
+      if (a) E.fonte.scrollTop = Math.max(0, a.offsetTop - E.fonte.offsetTop - E.fonte.clientHeight / 2);
+    }
+
+    function tabela(T, s) {
+      if (!s.st) { E.st.innerHTML = '<span class="r6-vazio">ainda não existe: a main() só cria a SymbolTable depois do Parser.run()</span>'; return; }
+      var nomes = Object.keys(s.st);
+      if (!nomes.length) { E.st.innerHTML = '<span class="r6-vazio">vazia</span>'; return; }
+      var lendo = s.k === "st_get_ret", escrevendo = /^st_set/.test(s.k);
+      E.st.innerHTML = '<table class="r6-tab"><tr><th>nome</th><th>Variable.value</th></tr>' + nomes.map(function (n) {
+        var c = n === s.stAlt ? (escrevendo ? "esc" : lendo ? "le" : "") : "";
+        return '<tr class="' + c + '"><td>' + h(n) + "</td><td>" + h(s.st[n]) + (c === "esc" ? ' <em>← escrita</em>' : c === "le" ? ' <em>→ lida</em>' : "") + "</td></tr>";
+      }).join("") + "</table>";
+    }
+
+    function io(T, s) {
+      var out = T.out.slice(0, s.nout), nova = /print_out/.test(s.k);
+      E.saida.innerHTML = '<span class="lb">Saída (System.out)</span>' + (out.length ? out.map(function (l, k) {
+        return k === out.length - 1 && nova ? '<b class="r6-out-novo">' + h(l) + "</b>" : h(l);
+      }).join("<br>") : '<span style="color:#6f8b92">(nada impresso ainda)</span>') +
+        (s.erro && s.erro.cls ? '<div class="r6-exc">Exception in thread "main" ' + h(s.erro.cls) + ": " + h(s.erro.msg) + "</div>" : "");
+      var ls = (S.stdin || "").split(/\r\n|\n/);
+      if (/\n$/.test(S.stdin || "")) ls.pop();
+      E.stdin.innerHTML = '<span class="lb">stdin</span>' + (S.stdin ? ls.map(function (l, k) {
+        return '<span class="' + (k < s.lidos ? "lido" : k === s.lidos ? "prox" : "") + '">' + (h(l) || "&nbsp;") + "</span>";
+      }).join("") : '<span class="r6-vazio">vazio (Scanln() vai falhar)</span>');
+    }
+
+    function narra(T, s) {
+      E.pn.textContent = s.erro ? (s.erro.origem === "Limite" ? "limite" : "erro") : SELO[s.fase] || "passo";
+      E.pn.style.background = COR[s.erro ? "erro" : s.fase] || COR.main;
+      var tx = h(s.narr);
+      if (s.erro && s.erro.cls) {
+        var exp = { Lexer: "Erro léxico: o caractere não começa nenhum token.", Parser: "Erro sintático: os tokens existem, mas a ordem não bate com a gramática.", Semantic: "Erro semântico: a escrita está certa, o significado não. Só aparece na execução." }[s.erro.origem] || "Exceção lançada pela própria JVM.";
+        tx += '<span class="r6-exp">' + exp + "</span>";
+      } else if (S.i === T.steps.length - 1 && !S.res.erro && !S.res.limite) {
+        tx += '<span class="r6-exp ok">Terminou sem erro. Saída: ' + (T.out.length ? h(T.out.join(" · ")) : "nada") + "</span>";
+      }
+      E.tx.innerHTML = tx;
+      E.tx.className = "tx r6-tx" + (s.erro ? " erro" : "");
+    }
+
+    E.src.value = EXEMPLOS[0][1];
+    E.inp.value = EXEMPLOS[0][2];
+    compila();
+    return { carregar: function (src, stdin) { E.src.value = src; E.inp.value = stdin || ""; compila(); host.scrollIntoView({ behavior: "smooth", block: "start" }); tocar(); } };
+  }
+
+  var inst = [];
+  Array.prototype.forEach.call(document.querySelectorAll("[data-r6]"), function (el) { inst.push(montar(el)); });
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-r6-abrir]");
+    if (!b || !inst[0]) return;
+    inst[0].carregar(b.getAttribute("data-r6-abrir").replace(/\\n/g, "\n"), (b.getAttribute("data-stdin") || "").replace(/\\n/g, "\n"));
+  });
+})();
+
+</script>
+<!-- /R6:js -->
 </body>
 </html>
